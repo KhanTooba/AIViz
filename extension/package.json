@@ -1,0 +1,113 @@
+{
+  "name": "aiviz",
+  "displayName": "AIViz — Abstract Interpretation Visualizer",
+  "description": "Step through static-analysis fixpoint computations like a debugger: CFG, abstract states, joins, widening and narrowing.",
+  "version": "0.1.0",
+  "license": "MIT",
+  "publisher": "aiviz",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": ["Visualization", "Education", "Programming Languages"],
+  "keywords": ["abstract interpretation", "static analysis", "cfg", "c", "teaching"],
+  "activationEvents": ["onLanguage:c"],
+  "main": "./dist/extension.cjs",
+  "contributes": {
+    "commands": [
+      {
+        "command": "aiviz.analyze",
+        "title": "AIViz: Analyze Current Function",
+        "category": "AIViz",
+        "icon": "$(graph)"
+      },
+      {
+        "command": "aiviz.next",
+        "title": "AIViz: Next Step",
+        "category": "AIViz"
+      },
+      {
+        "command": "aiviz.prev",
+        "title": "AIViz: Previous Step",
+        "category": "AIViz"
+      },
+      {
+        "command": "aiviz.stepOverWidening",
+        "title": "AIViz: Step Over to Next Widening",
+        "category": "AIViz"
+      },
+      {
+        "command": "aiviz.loadTrace",
+        "title": "AIViz: Load Trace From File",
+        "category": "AIViz"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "aiviz.analyze",
+          "when": "editorLangId == c",
+          "group": "navigation"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "aiviz.next",
+        "key": "f10",
+        "when": "aiviz.traceLoaded"
+      },
+      {
+        "command": "aiviz.prev",
+        "key": "shift+f10",
+        "when": "aiviz.traceLoaded"
+      },
+      {
+        "command": "aiviz.stepOverWidening",
+        "key": "f11",
+        "when": "aiviz.traceLoaded"
+      }
+    ],
+    "configuration": {
+      "title": "AIViz",
+      "properties": {
+        "aiviz.wideningDelay": {
+          "type": "number",
+          "default": 1,
+          "minimum": 0,
+          "description": "Iterations at a loop header before widening is applied."
+        },
+        "aiviz.narrowing": {
+          "type": "boolean",
+          "default": true,
+          "description": "Run narrowing passes after widening to recover precision."
+        },
+        "aiviz.maxIterations": {
+          "type": "number",
+          "default": 200,
+          "description": "Abort the analysis after this many iterations instead of hanging."
+        },
+        "aiviz.analyzeOnSave": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically re-run the analysis when the file currently shown in the panel is saved."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "node build.js",
+    "watch": "node build.js --watch",
+    "package": "npm run build && vsce package --no-dependencies --allow-missing-repository --out aiviz.vsix"
+  },
+  "dependencies": {
+    "@aiviz/trace-protocol": "0.1.0",
+    "@dagrejs/dagre": "^1.1.4"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.90.0",
+    "@vscode/vsce": "^3.2.1",
+    "esbuild": "^0.24.0"
+  }
+}

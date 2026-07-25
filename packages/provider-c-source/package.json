@@ -1,0 +1,29 @@
+{
+  "name": "@aiviz/provider-c-source",
+  "version": "0.1.0",
+  "description": "Source-level C analysis provider for AIViz, built on tree-sitter",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "bin": {
+    "aiviz-provider-c-source": "./dist/main.js"
+  },
+  "files": ["dist", "provider.json"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "node --test dist/test/*.test.js"
+  },
+  "dependencies": {
+    "@aiviz/analysis-core": "0.1.0",
+    "@aiviz/trace-protocol": "0.1.0",
+    "tree-sitter-c": "^0.24.1",
+    "web-tree-sitter": "^0.26.11"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "name": "aiviz",
+  "version": "0.1.0",
+  "description": "A visualization platform and protocol for interactive static-analysis traces",
+  "license": "MIT",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "extension"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "clean": "rm -rf packages/*/dist extension/dist extension/out"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

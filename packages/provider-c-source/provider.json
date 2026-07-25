@@ -1,0 +1,8 @@
+{
+  "id": "c-source",
+  "name": "C (source-level, tree-sitter)",
+  "version": "0.1.0",
+  "languages": ["c"],
+  "command": "node",
+  "args": ["./dist/main.js"]
+}

@@ -1,0 +1,490 @@
+/*
+ * Everything is expressed in VS Code theme variables so the panel matches the
+ * user's chosen theme in both light and dark without a second stylesheet.
+ */
+
+:root {
+  --aiviz-gap: 10px;
+  --aiviz-radius: 4px;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--vscode-font-family);
+  font-size: var(--vscode-font-size);
+  color: var(--vscode-foreground);
+  background: var(--vscode-sideBar-background);
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.section {
+  border-bottom: 1px solid var(--vscode-panel-border);
+  padding: 6px var(--aiviz-gap) 10px;
+}
+
+.section-title {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--vscode-descriptionForeground);
+  padding: 4px 0;
+  user-select: none;
+}
+
+.muted {
+  color: var(--vscode-descriptionForeground);
+}
+
+.right {
+  margin-left: auto;
+}
+
+/* ---------- status ---------- */
+
+.status-line {
+  margin: 3px 0;
+  overflow-wrap: anywhere;
+}
+
+.status-note {
+  margin-top: 6px;
+  padding: 6px 8px;
+  border-left: 2px solid var(--vscode-textLink-foreground);
+  background: var(--vscode-textBlockQuote-background);
+  font-size: 0.92em;
+}
+
+.badge {
+  display: inline-block;
+  padding: 1px 7px;
+  border-radius: 9px;
+  font-size: 0.88em;
+  font-weight: 600;
+}
+
+.badge-ok {
+  background: var(--vscode-testing-iconPassed, #2ea043);
+  color: var(--vscode-editor-background);
+}
+
+.badge-warn {
+  background: var(--vscode-editorWarning-foreground, #d29922);
+  color: var(--vscode-editor-background);
+}
+
+/* ---------- pickers ---------- */
+
+.picker-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.picker-label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1 1 120px;
+  font-size: 0.82em;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--vscode-descriptionForeground);
+}
+
+.picker {
+  width: 100%;
+  padding: 3px 5px;
+  border: 1px solid var(--vscode-dropdown-border, var(--vscode-panel-border));
+  border-radius: var(--aiviz-radius);
+  background: var(--vscode-dropdown-background);
+  color: var(--vscode-dropdown-foreground);
+  font-family: inherit;
+  font-size: var(--vscode-font-size);
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.busy::after {
+  content: '…';
+}
+
+/* ---------- diagnostics ---------- */
+
+.diagnostics {
+  border-left: 2px solid var(--vscode-errorForeground);
+  background: var(--vscode-inputValidation-errorBackground, var(--vscode-textBlockQuote-background));
+  padding: 7px 9px;
+  border-radius: 0 var(--aiviz-radius) var(--aiviz-radius) 0;
+}
+
+.diag-title {
+  font-weight: 600;
+  margin-bottom: 5px;
+  color: var(--vscode-errorForeground);
+}
+
+.diag {
+  font-size: 0.92em;
+  line-height: 1.45;
+  margin: 2px 0;
+}
+
+.diag-line {
+  font-family: var(--vscode-editor-font-family, monospace);
+  color: var(--vscode-descriptionForeground);
+}
+
+/* ---------- CFG ---------- */
+
+.cfg-host {
+  width: 100%;
+  overflow: hidden;
+  border-radius: var(--aiviz-radius);
+  background: var(--vscode-editor-background);
+}
+
+.cfg-svg {
+  width: 100%;
+  display: block;
+  cursor: grab;
+  touch-action: none;
+}
+
+.cfg-svg.cfg-dragging {
+  cursor: grabbing;
+}
+
+.cfg-box {
+  fill: var(--vscode-editorWidget-background);
+  stroke: var(--vscode-panel-border);
+  stroke-width: 1;
+}
+
+.cfg-box-header {
+  stroke: var(--vscode-textLink-foreground);
+  stroke-width: 1.6;
+}
+
+.cfg-box-entry,
+.cfg-box-exit {
+  stroke-dasharray: 3 2;
+}
+
+/* One line per statement — a block with several statements and no branch
+   between them shows all of them, not just the first. */
+.cfg-stmt {
+  fill: var(--vscode-editor-foreground);
+  font-family: var(--vscode-editor-font-family, monospace);
+  font-size: 11px;
+  text-anchor: start;
+  pointer-events: none;
+}
+
+.cfg-stmt-more {
+  fill: var(--vscode-descriptionForeground);
+  font-style: italic;
+}
+
+.cfg-divider {
+  stroke: var(--vscode-panel-border);
+  stroke-width: 1;
+  opacity: 0.6;
+}
+
+.cfg-sublabel {
+  fill: var(--vscode-descriptionForeground);
+  font-size: 9px;
+  text-anchor: start;
+  pointer-events: none;
+}
+
+.cfg-badge {
+  fill: var(--vscode-textLink-foreground);
+  font-size: 11px;
+  text-anchor: end;
+  pointer-events: none;
+}
+
+.cfg-node {
+  cursor: pointer;
+}
+
+.cfg-node:hover .cfg-box {
+  stroke: var(--vscode-focusBorder);
+}
+
+/* The block the current step is happening at. */
+.cfg-node-current .cfg-box {
+  fill: var(--vscode-editor-selectionBackground);
+  stroke: var(--vscode-focusBorder);
+  stroke-width: 2;
+}
+
+/* Other blocks the clicked source line also maps to. */
+.cfg-node-related .cfg-box {
+  stroke: var(--vscode-textLink-foreground);
+  stroke-width: 1.6;
+  stroke-dasharray: 4 2;
+}
+
+.cfg-node-widening .cfg-box {
+  fill: color-mix(
+    in srgb,
+    var(--vscode-editorWarning-foreground, #d29922) 12%,
+    var(--vscode-editorWidget-background)
+  );
+}
+
+.cfg-edge {
+  fill: none;
+  stroke: var(--vscode-panel-border);
+  stroke-width: 1.2;
+}
+
+.cfg-edge-back {
+  stroke: var(--vscode-textLink-foreground);
+  stroke-dasharray: 4 3;
+}
+
+.cfg-arrow {
+  fill: var(--vscode-panel-border);
+}
+
+.cfg-arrow-active {
+  fill: var(--vscode-focusBorder);
+}
+
+/* ---------- controls ---------- */
+
+.controls {
+  padding: 8px var(--aiviz-gap);
+  border-bottom: 1px solid var(--vscode-panel-border);
+  position: sticky;
+  top: 0;
+  background: var(--vscode-sideBar-background);
+  z-index: 2;
+}
+
+.btn-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.btn {
+  flex: 1 1 auto;
+  min-width: 74px;
+  padding: 4px 8px;
+  border: 1px solid var(--vscode-button-border, transparent);
+  border-radius: var(--aiviz-radius);
+  background: var(--vscode-button-secondaryBackground);
+  color: var(--vscode-button-secondaryForeground);
+  font-family: inherit;
+  font-size: inherit;
+  cursor: pointer;
+}
+
+.btn:hover:not(:disabled) {
+  background: var(--vscode-button-secondaryHoverBackground);
+}
+
+.btn-primary {
+  background: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--vscode-button-hoverBackground);
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.scrub-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.scrub {
+  flex: 1;
+  accent-color: var(--vscode-focusBorder);
+}
+
+.counter {
+  font-variant-numeric: tabular-nums;
+  font-size: 0.9em;
+  color: var(--vscode-descriptionForeground);
+  white-space: nowrap;
+}
+
+/* ---------- step / explanation ---------- */
+
+.step-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.chip {
+  padding: 1px 7px;
+  border-radius: 9px;
+  font-size: 0.82em;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: var(--vscode-badge-background);
+  color: var(--vscode-badge-foreground);
+}
+
+/* Widening and narrowing are the steps worth spotting at a glance. */
+.chip-widen {
+  background: var(--vscode-editorWarning-foreground, #d29922);
+  color: var(--vscode-editor-background);
+}
+
+.chip-narrow {
+  background: var(--vscode-testing-iconPassed, #2ea043);
+  color: var(--vscode-editor-background);
+}
+
+.chip-join {
+  background: var(--vscode-textLink-foreground);
+  color: var(--vscode-editor-background);
+}
+
+.narration {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.operands {
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px dashed var(--vscode-panel-border);
+}
+
+.operands-title {
+  font-size: 0.85em;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 3px;
+}
+
+.operand {
+  display: flex;
+  gap: 6px;
+  padding: 1px 0;
+}
+
+.operand-idx {
+  font-variant-numeric: tabular-nums;
+}
+
+.inline-state {
+  font-family: var(--vscode-editor-font-family, monospace);
+  font-size: 0.92em;
+}
+
+/* ---------- state table ---------- */
+
+.state-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--vscode-editor-font-family, monospace);
+  font-size: 0.92em;
+}
+
+.state-table th {
+  text-align: left;
+  font-weight: 500;
+  font-size: 0.85em;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--vscode-descriptionForeground);
+  border-bottom: 1px solid var(--vscode-panel-border);
+  padding: 2px 4px;
+}
+
+.state-table td {
+  padding: 2px 4px;
+  vertical-align: top;
+}
+
+.row-changed {
+  background: var(--vscode-diffEditor-insertedTextBackground, rgba(46, 160, 67, 0.12));
+}
+
+.arrow {
+  color: var(--vscode-descriptionForeground);
+  text-align: center;
+}
+
+.vname {
+  color: var(--vscode-symbolIcon-variableForeground, var(--vscode-foreground));
+  font-family: var(--vscode-editor-font-family, monospace);
+}
+
+.val {
+  font-family: var(--vscode-editor-font-family, monospace);
+}
+
+.val-top {
+  color: var(--vscode-editorWarning-foreground, #d29922);
+}
+
+.val-bottom {
+  color: var(--vscode-descriptionForeground);
+  font-style: italic;
+}
+
+/* ---------- widening loss ---------- */
+
+.loss-item {
+  padding: 6px 8px;
+  margin-bottom: 6px;
+  border-left: 2px solid var(--vscode-editorWarning-foreground, #d29922);
+  background: var(--vscode-textBlockQuote-background);
+  border-radius: 0 var(--aiviz-radius) var(--aiviz-radius) 0;
+}
+
+.loss-head {
+  margin-bottom: 3px;
+}
+
+.loss-row {
+  font-size: 0.92em;
+  margin-bottom: 4px;
+}
+
+/* Struck through: this is the precision we gave up. */
+.val-joined {
+  text-decoration: line-through;
+  color: var(--vscode-errorForeground);
+}
+
+.val-widened {
+  color: var(--vscode-editorWarning-foreground, #d29922);
+  font-weight: 600;
+}
+
+.loss-msg {
+  margin: 4px 0 0;
+  font-size: 0.92em;
+  line-height: 1.45;
+  color: var(--vscode-descriptionForeground);
+}

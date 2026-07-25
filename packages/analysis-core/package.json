@@ -1,0 +1,23 @@
+{
+  "name": "@aiviz/analysis-core",
+  "version": "0.1.0",
+  "description": "Abstract domains and the instrumented fixpoint engine",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "node --test dist/test/*.test.js"
+  },
+  "dependencies": {
+    "@aiviz/trace-protocol": "0.1.0"
+  }
+}

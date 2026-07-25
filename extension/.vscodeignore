@@ -1,0 +1,11 @@
+# Everything the extension needs is bundled into dist/ by build.js, so the
+# sources and their dependencies are not shipped.
+src/**
+dev/**
+build.js
+tsconfig.json
+node_modules/**
+**/*.map
+**/*.ts
+dist/preview.html
+dist/fixtures/**
