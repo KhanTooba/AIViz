@@ -1,5 +1,15 @@
 import type { AnalysisTrace, DisplayState, Step, VarValue } from '@aiviz/trace-protocol';
 import { CfgView, formatLines } from './cfg.js';
+import { LatticeView, type ChainItem } from './lattice.js';
+
+/** Step kinds whose value at a block is worth a point on the ascending chain. */
+const CHAIN_STEP_KINDS: ReadonlySet<Step['kind']> = new Set([
+  'transfer',
+  'join',
+  'widen',
+  'narrow',
+  'stabilize',
+]);
 
 declare function acquireVsCodeApi(): {
   postMessage(msg: unknown): void;
@@ -61,7 +71,9 @@ class App {
   private session?: SessionInfo;
   private index = 0;
   private cfg?: CfgView;
+  private lattice?: LatticeView;
   private relatedBlocks: string[] = [];
+  private selectedLatticeVar?: string;
 
   private readonly root = document.getElementById('root')!;
   private readonly statusEl = h('div', { class: 'status' });
@@ -70,9 +82,21 @@ class App {
   private readonly explainEl = h('div', { class: 'explain' });
   private readonly stateEl = h('div', { class: 'state' });
   private readonly lossEl = h('div', { class: 'loss' });
+  private readonly latticeHost = h('div', { class: 'lattice-host' });
+  private readonly latticeVarSelect = h('select', { class: 'picker lattice-var-picker' }) as HTMLSelectElement;
 
   private readonly stepSection = section('Current step', this.explainEl);
   private readonly stateSection = section('Abstract state', this.stateEl);
+  private readonly latticeSection = section(
+    'Lattice',
+    h(
+      'label',
+      { class: 'picker-label lattice-var-label' },
+      'variable',
+      this.latticeVarSelect
+    ),
+    this.latticeHost
+  );
 
   mount(): void {
     this.root.replaceChildren(
@@ -81,11 +105,17 @@ class App {
       this.controlsEl,
       this.stepSection,
       this.stateSection,
+      this.latticeSection,
       this.lossEl
     );
     this.cfg = new CfgView(this.cfgHost, {
       onBlockClick: (blockId) => this.onBlockClick(blockId),
     });
+    this.lattice = new LatticeView(this.latticeHost);
+    this.latticeVarSelect.onchange = () => {
+      this.selectedLatticeVar = this.latticeVarSelect.value;
+      this.renderLattice();
+    };
     this.installKeys();
     vscode.postMessage({ type: 'ready' });
   }
@@ -103,6 +133,7 @@ class App {
     this.session = session;
     this.index = 0;
     this.relatedBlocks = [];
+    this.selectedLatticeVar = trace.variables[0]?.name;
     this.cfg?.render(trace.cfg, trace.lineMap.blockToLines);
     this.cfg?.setWideningPoints(trace.summary.wideningPoints);
     this.render();
@@ -175,11 +206,13 @@ class App {
     const hasSteps = this.trace.steps.length > 0;
     this.stepSection.hidden = !hasSteps;
     this.stateSection.hidden = !hasSteps;
+    this.latticeSection.hidden = !hasSteps;
     if (!hasSteps) {
       this.controlsEl.replaceChildren();
       this.explainEl.replaceChildren();
       this.stateEl.replaceChildren();
       this.lossEl.replaceChildren();
+      this.latticeHost.replaceChildren();
       return;
     }
 
@@ -187,6 +220,7 @@ class App {
     this.renderExplain();
     this.renderState();
     this.renderLoss();
+    this.renderLattice();
     this.cfg?.setHighlight(this.step?.blockId, this.relatedBlocks);
     vscode.postMessage({
       type: 'stepChanged',
@@ -457,6 +491,64 @@ class App {
     );
 
     this.lossEl.replaceChildren(section('Precision lost to widening', ...items));
+  }
+
+  /**
+   * Finite lattices (Sign) get their true Hasse diagram, with the current
+   * value's node highlighted. Infinite lattices (Intervals, Constant
+   * Propagation) have no finite diagram to draw, so the ascending chain a
+   * variable actually traversed is plotted instead — the fragment of the
+   * lattice the analysis actually walked, scoped to the block the current
+   * step is at, since that is where widening decisions are made.
+   */
+  private renderLattice(): void {
+    const t = this.trace;
+    const step = this.step;
+    if (!t || !step || !this.lattice) return;
+
+    this.syncLatticeVarPicker(t);
+    const varName = this.selectedLatticeVar;
+    if (!varName) {
+      this.lattice.showEmpty('This function has no variables to track.');
+      return;
+    }
+
+    const graph = t.domain.latticeGraph;
+    if (graph) {
+      const current = step.after.vars.find((v) => v.name === varName)?.repr;
+      this.lattice.showHasse(graph, current);
+      return;
+    }
+
+    const items: ChainItem[] = t.steps
+      .filter((s) => s.blockId === step.blockId && CHAIN_STEP_KINDS.has(s.kind))
+      .flatMap((s) => {
+        const v = s.after.vars.find((x) => x.name === varName);
+        return v ? [{ label: v.repr, kind: s.kind, stepIndex: s.index }] : [];
+      });
+
+    if (items.length === 0) {
+      this.lattice.showEmpty(`No recorded values for ${varName} at ${step.blockId} yet.`);
+      return;
+    }
+    this.lattice.showChain(items, this.index);
+  }
+
+  private syncLatticeVarPicker(t: AnalysisTrace): void {
+    const names = t.variables.map((v) => v.name);
+    const current = Array.from(this.latticeVarSelect.options, (o) => o.value);
+    if (current.join(',') === names.join(',')) {
+      this.latticeVarSelect.value = this.selectedLatticeVar ?? names[0] ?? '';
+      return;
+    }
+    this.latticeVarSelect.replaceChildren(
+      ...names.map((name) => {
+        const opt = h('option', { value: name }) as HTMLOptionElement;
+        opt.textContent = name;
+        opt.selected = name === this.selectedLatticeVar;
+        return opt;
+      })
+    );
   }
 }
 

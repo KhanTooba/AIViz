@@ -136,6 +136,36 @@ function checkBlocks(c: Checker, blocks: Block[], entry: string): Set<string> {
   return ids;
 }
 
+function checkLatticeGraph(c: Checker, graph: unknown): void {
+  if (graph === undefined) return; // absent means "infinite lattice", not an error
+  if (!isObject(graph) || !Array.isArray(graph.nodes) || !Array.isArray(graph.edges)) {
+    c.fail('domain.latticeGraph', 'expected { nodes, edges }');
+    return;
+  }
+  const ids = new Set<string>();
+  graph.nodes.forEach((n, i) => {
+    if (!isObject(n) || typeof n.id !== 'string' || typeof n.label !== 'string') {
+      c.fail(`domain.latticeGraph.nodes[${i}]`, 'expected { id, label } strings');
+      return;
+    }
+    if (ids.has(n.id)) c.fail(`domain.latticeGraph.nodes[${i}].id`, `duplicate id "${n.id}"`);
+    ids.add(n.id);
+  });
+  (graph.edges as unknown[]).forEach((e, i) => {
+    if (!Array.isArray(e) || e.length !== 2) {
+      c.fail(`domain.latticeGraph.edges[${i}]`, 'expected a [lower, upper] pair');
+      return;
+    }
+    const [lower, upper] = e as [unknown, unknown];
+    if (typeof lower !== 'string' || !ids.has(lower)) {
+      c.fail(`domain.latticeGraph.edges[${i}]`, `unknown node "${String(lower)}"`);
+    }
+    if (typeof upper !== 'string' || !ids.has(upper)) {
+      c.fail(`domain.latticeGraph.edges[${i}]`, `unknown node "${String(upper)}"`);
+    }
+  });
+}
+
 function checkSteps(c: Checker, steps: Step[], blockIds: Set<string>): void {
   steps.forEach((s, i) => {
     const path = `steps[${i}]`;
@@ -208,6 +238,7 @@ export function validateTrace(input: unknown): ValidationResult {
 
   const blockIds = checkBlocks(c, t.cfg.blocks ?? [], t.cfg.entry);
   checkSteps(c, t.steps, blockIds);
+  checkLatticeGraph(c, t.domain.latticeGraph);
 
   // Line map must point only at real blocks, and must round-trip.
   for (const [line, ids] of Object.entries(t.lineMap.lineToBlocks ?? {})) {

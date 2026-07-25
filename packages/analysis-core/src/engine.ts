@@ -525,12 +525,13 @@ export function analyze<T>(
   const loopHeaders = findLoopHeaders(cfgCopy);
   const engine = new Engine(cfgCopy, domain, full);
   const { steps, summary } = engine.run();
+  const latticeGraph = domain.latticeGraph?.();
 
   return {
     version: PROTOCOL_VERSION,
     provider: meta.provider,
     program: { file: meta.file, function: meta.functionName, language: meta.language },
-    domain: { id: domain.id, name: domain.name },
+    domain: { id: domain.id, name: domain.name, ...(latticeGraph ? { latticeGraph } : {}) },
     cfg: {
       entry: cfgCopy.entry,
       ...(cfgCopy.exit ? { exit: cfgCopy.exit } : {}),

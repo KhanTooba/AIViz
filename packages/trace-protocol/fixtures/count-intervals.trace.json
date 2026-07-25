@@ -79,10 +79,10 @@
         "lines": [
           {
             "start": 7,
-            "end": 7
+            "end": 8
           }
         ],
-        "label": "return i;"
+        "label": "i = i-1;\nreturn i;"
       },
       {
         "blockId": "b4",
@@ -92,8 +92,8 @@
         "succs": [],
         "lines": [
           {
-            "start": 8,
-            "end": 8
+            "start": 9,
+            "end": 9
           }
         ],
         "isExit": true,
@@ -119,6 +119,9 @@
         "b3"
       ],
       "8": [
+        "b3"
+      ],
+      "9": [
         "b4"
       ]
     },
@@ -144,13 +147,13 @@
       "b3": [
         {
           "start": 7,
-          "end": 7
+          "end": 8
         }
       ],
       "b4": [
         {
-          "start": 8,
-          "end": 8
+          "start": 9,
+          "end": 9
         }
       ]
     },
@@ -160,7 +163,8 @@
       "4": "b2",
       "5": "b2",
       "7": "b3",
-      "8": "b4"
+      "8": "b3",
+      "9": "b4"
     }
   },
   "variables": [
@@ -692,8 +696,8 @@
       "index": 14
     },
     {
-      "kind": "push",
-      "blockId": "b4",
+      "kind": "transfer",
+      "blockId": "b3",
       "iteration": 2,
       "before": {
         "kind": "state",
@@ -710,7 +714,43 @@
         "vars": [
           {
             "name": "i",
-            "repr": "[20, +∞)",
+            "repr": "[19, +∞)",
+            "kind": "value"
+          }
+        ]
+      },
+      "changed": [
+        "i"
+      ],
+      "sourceSpan": {
+        "startLine": 7,
+        "startColumn": 3,
+        "endLine": 7,
+        "endColumn": 11
+      },
+      "explanation": "`i = i-1;` evaluates i - 1 in the current state and stores the result, so i becomes [19, +∞).",
+      "index": 15
+    },
+    {
+      "kind": "push",
+      "blockId": "b4",
+      "iteration": 2,
+      "before": {
+        "kind": "state",
+        "vars": [
+          {
+            "name": "i",
+            "repr": "[19, +∞)",
+            "kind": "value"
+          }
+        ]
+      },
+      "after": {
+        "kind": "state",
+        "vars": [
+          {
+            "name": "i",
+            "repr": "[19, +∞)",
             "kind": "value"
           }
         ]
@@ -720,7 +760,7 @@
         "next": "b4"
       },
       "explanation": "b4 is queued with the state flowing out of b3.",
-      "index": 15
+      "index": 16
     },
     {
       "kind": "transfer",
@@ -756,7 +796,7 @@
         "endColumn": 15
       },
       "explanation": "`i = i + 1;` evaluates i + 1 in the current state and stores the result, so i becomes [1, 20].",
-      "index": 16
+      "index": 17
     },
     {
       "kind": "transfer",
@@ -792,7 +832,7 @@
         "endColumn": 10
       },
       "explanation": "`i*=2;` evaluates i * 2 in the current state and stores the result, so i becomes [2, 40].",
-      "index": 17
+      "index": 18
     },
     {
       "kind": "push",
@@ -823,7 +863,7 @@
         "next": "b1"
       },
       "explanation": "b1 is queued with the state flowing out of b2. This is a back edge to a loop header — the re-queueing is what makes the analysis iterate.",
-      "index": 18
+      "index": 19
     },
     {
       "kind": "join",
@@ -875,7 +915,7 @@
         "i"
       ],
       "explanation": "2 edges reach this block: i ↦ [0, 0] from b0; i ↦ [2, 40] from b2. The analysis must account for every path, so it takes the least upper bound of them all, giving i ↦ [0, 40].",
-      "index": 19
+      "index": 20
     },
     {
       "kind": "widen",
@@ -935,7 +975,7 @@
         }
       ],
       "explanation": "Values grew between iterations (i ↦ [0, +∞) → i ↦ [0, 40]). Rather than climbing one step at a time forever, widening pushes the growing bounds straight out to infinity, giving i ↦ [0, +∞). This is what guarantees the analysis terminates, and the precision below is what it costs.",
-      "index": 20
+      "index": 21
     },
     {
       "kind": "stabilize",
@@ -965,7 +1005,7 @@
         "size": 0
       },
       "explanation": "b1's state stopped changing, so it is not queued again. The ascending phase has reached a fixed point here.",
-      "index": 21
+      "index": 22
     },
     {
       "kind": "stabilize",
@@ -995,7 +1035,7 @@
         "size": 0
       },
       "explanation": "b0's state stopped changing, so it is not queued again. Narrowing has converged here.",
-      "index": 22
+      "index": 23
     },
     {
       "kind": "join",
@@ -1047,7 +1087,7 @@
         "i"
       ],
       "explanation": "2 edges reach this block: i ↦ [0, 0] from b0; i ↦ [2, 40] from b2. The analysis must account for every path, so it takes the least upper bound of them all, giving i ↦ [0, 40].",
-      "index": 23
+      "index": 24
     },
     {
       "kind": "narrow",
@@ -1099,7 +1139,7 @@
         "i"
       ],
       "explanation": "Narrowing re-runs the loop from the widened result to win precision back. The incoming edges give i ↦ [0, 40], and because the current bounds are the infinities widening invented, narrowing may adopt the finite ones: i ↦ [0, 40].",
-      "index": 24
+      "index": 25
     },
     {
       "kind": "transfer",
@@ -1129,7 +1169,7 @@
         "i"
       ],
       "explanation": "Taking this branch assumes `i < 20`. That is real information: it narrows i ↦ [0, 40] to i ↦ [0, 19].",
-      "index": 25
+      "index": 26
     },
     {
       "kind": "transfer",
@@ -1159,7 +1199,7 @@
         "i"
       ],
       "explanation": "Taking this branch assumes `!(i < 20)`. That is real information: it narrows i ↦ [0, 40] to i ↦ [20, 40].",
-      "index": 26
+      "index": 27
     },
     {
       "kind": "push",
@@ -1190,11 +1230,11 @@
         "next": "b3"
       },
       "explanation": "b3 is queued with the state flowing out of b1.",
-      "index": 27
+      "index": 28
     },
     {
-      "kind": "push",
-      "blockId": "b4",
+      "kind": "transfer",
+      "blockId": "b3",
       "iteration": 4,
       "before": {
         "kind": "state",
@@ -1211,7 +1251,43 @@
         "vars": [
           {
             "name": "i",
-            "repr": "[20, 40]",
+            "repr": "[19, 39]",
+            "kind": "value"
+          }
+        ]
+      },
+      "changed": [
+        "i"
+      ],
+      "sourceSpan": {
+        "startLine": 7,
+        "startColumn": 3,
+        "endLine": 7,
+        "endColumn": 11
+      },
+      "explanation": "`i = i-1;` evaluates i - 1 in the current state and stores the result, so i becomes [19, 39].",
+      "index": 29
+    },
+    {
+      "kind": "push",
+      "blockId": "b4",
+      "iteration": 4,
+      "before": {
+        "kind": "state",
+        "vars": [
+          {
+            "name": "i",
+            "repr": "[19, 39]",
+            "kind": "value"
+          }
+        ]
+      },
+      "after": {
+        "kind": "state",
+        "vars": [
+          {
+            "name": "i",
+            "repr": "[19, 39]",
             "kind": "value"
           }
         ]
@@ -1221,7 +1297,7 @@
         "next": "b4"
       },
       "explanation": "b4 is queued with the state flowing out of b3.",
-      "index": 28
+      "index": 30
     },
     {
       "kind": "stabilize",
@@ -1251,21 +1327,21 @@
         "size": 0
       },
       "explanation": "b2's state stopped changing, so it is not queued again. Narrowing has converged here.",
-      "index": 29
+      "index": 31
     }
   ],
   "summary": {
     "iterations": 4,
-    "stepCount": 30,
+    "stepCount": 32,
     "converged": true,
     "wideningPoints": [
       "b1"
     ],
     "wideningStepIndices": [
       10,
-      20
+      21
     ],
-    "stabilizedAtStep": 29
+    "stabilizedAtStep": 31
   },
   "diagnostics": []
 }

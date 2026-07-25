@@ -488,3 +488,101 @@ body {
   line-height: 1.45;
   color: var(--vscode-descriptionForeground);
 }
+
+/* ---------- lattice ---------- */
+
+.lattice-var-label {
+  margin-bottom: 8px;
+  max-width: 200px;
+}
+
+.lattice-host {
+  min-height: 40px;
+}
+
+.lattice-empty {
+  margin: 0;
+}
+
+.lattice-svg {
+  width: 100%;
+  display: block;
+}
+
+.lattice-node-circle {
+  fill: var(--vscode-editorWidget-background);
+  stroke: var(--vscode-panel-border);
+  stroke-width: 1.2;
+}
+
+.lattice-node-label {
+  fill: var(--vscode-editor-foreground);
+  font-family: var(--vscode-editor-font-family, monospace);
+  font-size: 11px;
+  text-anchor: middle;
+  pointer-events: none;
+}
+
+.lattice-node-current .lattice-node-circle {
+  fill: var(--vscode-editor-selectionBackground);
+  stroke: var(--vscode-focusBorder);
+  stroke-width: 2;
+}
+
+.lattice-edge {
+  stroke: var(--vscode-panel-border);
+  stroke-width: 1.2;
+}
+
+/* ---------- lattice: ascending chain ---------- */
+
+.lattice-chain {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  font-family: var(--vscode-editor-font-family, monospace);
+  font-size: 0.92em;
+}
+
+.lattice-chain-item {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 3px 8px;
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: var(--aiviz-radius);
+  background: var(--vscode-editorWidget-background);
+}
+
+.lattice-chain-item-current {
+  border-color: var(--vscode-focusBorder);
+  background: var(--vscode-editor-selectionBackground);
+}
+
+.lattice-chain-value {
+  font-weight: 600;
+}
+
+.lattice-chain-step {
+  font-size: 0.85em;
+}
+
+.lattice-chain-connector {
+  padding: 2px 8px;
+  color: var(--vscode-descriptionForeground);
+  font-size: 0.85em;
+}
+
+.lattice-chain-connector-widen {
+  color: var(--vscode-editorWarning-foreground, #d29922);
+  font-weight: 600;
+}
+
+.lattice-chain-connector-narrow {
+  color: var(--vscode-testing-iconPassed, #2ea043);
+  font-weight: 600;
+}
+
+.lattice-chain-connector-join {
+  color: var(--vscode-textLink-foreground);
+}

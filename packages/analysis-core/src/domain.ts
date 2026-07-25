@@ -8,19 +8,14 @@
  * implement `Domain` directly instead.
  */
 
-import type { DisplayState, LossItem, VarValue } from '@aiviz/trace-protocol';
+import type { DisplayState, HasseDiagram, LossItem, VarValue } from '@aiviz/trace-protocol';
 import { type CmpOp, type Cond, type Expr, negate } from './ir.js';
 
-export interface HasseNode {
-  id: string;
-  label: string;
-}
-
-export interface HasseDiagram {
-  nodes: HasseNode[];
-  /** `[lower, upper]` covering pairs, drawn bottom-to-top. */
-  edges: [string, string][];
-}
+// Re-exported so domain implementations can `import { HasseDiagram } from
+// '../domain.js'` without also depending on the protocol package directly —
+// but the protocol package remains the type's canonical home, since it has to
+// cross the wire from provider to client.
+export type { HasseDiagram, HasseNode } from '@aiviz/trace-protocol';
 
 export interface Domain<T> {
   readonly id: string;

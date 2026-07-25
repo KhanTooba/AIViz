@@ -197,6 +197,31 @@ test('Sign proves i is non-negative at the exit', () => {
   assert.ok(repr === '+' || repr === '≥0', `expected + or >=0, got ${String(repr)}`);
 });
 
+test('the trace carries a Hasse diagram for a finite lattice (Sign)', () => {
+  const trace = run(signDomain as never);
+  const graph = trace.domain.latticeGraph;
+  assert.ok(graph, 'expected Sign to publish a latticeGraph over the wire');
+  assert.equal(graph!.nodes.length, 8);
+  assert.equal(validateTrace(trace).issues.length, 0);
+
+  // Every VarValue.repr the domain ever emits must be a real node label —
+  // that agreement is what lets the client find "where a value sits" in the
+  // diagram with nothing more than a string match.
+  const nodeLabels = new Set(graph!.nodes.map((n) => n.label));
+  for (const step of trace.steps) {
+    for (const v of [...step.before.vars, ...step.after.vars]) {
+      assert.ok(nodeLabels.has(v.repr), `"${v.repr}" is not a node in Sign's latticeGraph`);
+    }
+  }
+});
+
+test('infinite lattices publish no latticeGraph', () => {
+  // Intervals and Constant Propagation are infinite lattices; the client falls
+  // back to plotting the ascending chain actually traversed for these.
+  assert.equal(run(intervalDomain as never).domain.latticeGraph, undefined);
+  assert.equal(run(constDomain as never).domain.latticeGraph, undefined);
+});
+
 test('constant propagation collapses to top when the loop merges values', () => {
   const trace = run(constDomain as never);
   const repr = reprOf(lastPushInto(trace, 'b3'), 'i');

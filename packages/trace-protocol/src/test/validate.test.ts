@@ -203,6 +203,51 @@ test('accepts converged:false when a reason is given', () => {
   assert.equal(result.valid, true, JSON.stringify(result.issues));
 });
 
+test('accepts a trace with no latticeGraph — infinite lattices publish none', () => {
+  const result = validateTrace(loadFixture());
+  assert.equal(result.valid, true);
+});
+
+test('accepts a well-formed latticeGraph', () => {
+  const result = mutate((t) => {
+    t.domain.latticeGraph = {
+      nodes: [
+        { id: 'bot', label: '⊥' },
+        { id: 'top', label: '⊤' },
+      ],
+      edges: [['bot', 'top']],
+    };
+  });
+  assert.equal(result.valid, true, JSON.stringify(result.issues));
+});
+
+test('rejects a latticeGraph edge referencing an unknown node', () => {
+  assertRejects(
+    mutate((t) => {
+      t.domain.latticeGraph = {
+        nodes: [{ id: 'bot', label: '⊥' }],
+        edges: [['bot', 'ghost']],
+      };
+    }),
+    'latticeGraph.edges'
+  );
+});
+
+test('rejects duplicate node ids in a latticeGraph', () => {
+  assertRejects(
+    mutate((t) => {
+      t.domain.latticeGraph = {
+        nodes: [
+          { id: 'x', label: '-' },
+          { id: 'x', label: '+' },
+        ],
+        edges: [],
+      };
+    }),
+    'latticeGraph.nodes'
+  );
+});
+
 test('rejects a line map pointing at an unknown block', () => {
   assertRejects(
     mutate((t) => {

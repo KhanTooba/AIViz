@@ -25,6 +25,33 @@ export interface SourceSpan {
   endColumn: number;
 }
 
+export interface HasseNode {
+  id: string;
+  /** Display label, e.g. `+`, `≤0`, `⊤`. Matches a `VarValue.repr`
+   * for the domain, which is how the client finds "where a value sits". */
+  label: string;
+}
+
+/**
+ * A finite lattice's structure, wire-carried so a provider can supply the
+ * shape for a domain the client has never seen (e.g. a v2 Parity domain from
+ * a third-party provider). Only meaningful for finite lattices — an infinite
+ * one (Intervals, Constant Propagation) has no finite Hasse diagram, and the
+ * client instead plots the ascending chain a variable actually traversed.
+ */
+export interface HasseDiagram {
+  nodes: HasseNode[];
+  /** `[lower, upper]` covering pairs, drawn bottom-to-top. */
+  edges: [string, string][];
+}
+
+export interface DomainRef {
+  id: string;
+  name: string;
+  /** Present only for finite lattices. */
+  latticeGraph?: HasseDiagram;
+}
+
 export type DiagnosticSeverity = 'error' | 'warning' | 'info';
 
 /**
@@ -181,7 +208,7 @@ export interface AnalysisTrace {
   version: string;
   provider: { id: string; name: string; version: string };
   program: { file: string; function: string; language: string };
-  domain: { id: string; name: string };
+  domain: DomainRef;
   cfg: Cfg;
   lineMap: LineMap;
   variables: VarMeta[];
