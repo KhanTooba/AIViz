@@ -1,0 +1,28 @@
+{
+  "name": "@aiviz/provider-llvm-ir",
+  "version": "0.1.0",
+  "description": "LLVM IR analysis provider for AIViz — a second frontend proving the protocol/engine are provider-agnostic",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "bin": {
+    "aiviz-provider-llvm-ir": "./dist/main.js"
+  },
+  "files": ["dist", "provider.json"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "node --test dist/test/*.test.js"
+  },
+  "dependencies": {
+    "@aiviz/analysis-core": "0.1.0",
+    "@aiviz/provider-sdk": "0.1.0",
+    "@aiviz/trace-protocol": "0.1.0"
+  }
+}

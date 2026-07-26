@@ -34,9 +34,10 @@ The design is LSP-shaped: **client / server / versioned protocol**.
 
 | Package | What it is |
 | --- | --- |
-| `packages/trace-protocol` | The contract: trace + provider types, and a conformance validator (`aiviz-validate`) |
+| `packages/trace-protocol` | The contract: trace + provider types, and a schema validator (`aiviz-validate`) |
 | `packages/analysis-core` | Abstract domains and the instrumented fixpoint engine |
-| `packages/provider-c-source` | v1 reference provider: source-level C via tree-sitter |
+| `packages/provider-sdk` | Helpers for *writing* a provider: stdio transport, manifest loading, conformance kit (`aiviz-conformance`) |
+| `packages/provider-c-source` | v1 reference provider: source-level C via tree-sitter, built on `provider-sdk` |
 | `extension` | The VS Code client |
 
 The engine and domains live **provider-side**. The client is analysis-free, which is what lets a
@@ -65,8 +66,20 @@ function calls, recursion, `malloc`/`free`, and unparseable source.
 The precheck is an **allow-list**, not a deny-list — tree-sitter parses C we have no semantics
 for, and silently analysing something unmodelled would produce confidently wrong invariants.
 
-**Domains:** Intervals, Sign, Constant Propagation. Congruence/Parity are v2; Octagons/Zones/
-Polyhedra are v3, and are the natural point to add an external provider wrapping Apron or ELINA.
+**Domains:** Intervals, Sign, Constant Propagation, Parity, Congruence (`aℤ+b`) — all
+non-relational, tracking each variable independently — plus four hand-rolled **relational**
+domains that track relationships *between* variables: Zones (`x - y ≤ c`), Octagons
+(`±x ± y ≤ c`), Zonotopes (affine forms over shared noise symbols), and Polyhedra (arbitrary
+linear inequalities, via Fourier–Motzkin elimination, scoped to a handful of variables).
+
+Parity and Congruence are worth contrasting with Intervals specifically for their widening.
+Parity has finite height, same as Sign, so widening is plain join. Congruence is infinite but
+uses a much blunter strategy than Intervals: rather than searching for a coarser common
+modulus, it discards all periodicity the moment a loop's value changes and jumps straight to
+`⊤`. Whether narrowing then recovers anything depends on the program: multiplying by a constant
+even number re-derives "even" from the arithmetic alone (recovers), but a loop guard like
+`i < 20` carries no periodicity information for this domain the way it does for Intervals
+(does not recover). Both are real, correct, and demonstrable in the compare view.
 
 ## Try it
 
@@ -115,7 +128,20 @@ On `examples/count.c` (`while (i < 10) i = i + 1;`), interval analysis converges
 
 There are also limits worth showing. In `examples/sum.c`, intervals cannot bound `total`, because
 the domain is non-relational and the loop guard mentions only `i`. That imprecision is not a bug
-to hide — it is the motivation for relational domains.
+to hide — it is the motivation for relational domains. It also does not fully resolve on
+`sum.c` specifically: `total` ends up `i(i-1)/2`, a *quadratic* relationship, and Zones/Octagons/
+Polyhedra only express *linear* constraints — there is no fixed `c` making `total - i ≤ c` true
+across the loop, so widening discards it there too. That is a real, honest boundary of what
+these domains can express, not a shortcoming of the implementation.
+
+`examples/lockstep.c` is the flagship relational example instead: two counters incrementing in
+lockstep under an *unbounded* loop (`j = i + 1` at entry, then both `i` and `j` incremented by 1
+each iteration). Neither counter is individually bounded — `n`, the loop's trip count, is an
+untracked parameter — but `j - i = 1` never changes, and Zones, Octagons, and Polyhedra all keep
+that relation exactly through widening, something Intervals cannot express at all since it never
+looks at more than one variable at a time. Zonotopes discovers the same relation at the join but
+loses it once widening runs (see `domains/zonotopes.ts`'s doc comment) — a real, deliberate
+tradeoff for guaranteed termination, worth seeing in the compare view alongside the others.
 
 ## Writing a provider
 
@@ -128,23 +154,74 @@ aiviz/precheck       -> { supported, diagnostics }
 aiviz/analyze        -> AnalysisTrace
 ```
 
-Validate your output against the schema before wiring it up:
+In TypeScript, `@aiviz/provider-sdk` reduces that to implementing the four methods and calling
+`serveOverStdio(new MyProvider())` — see [`provider-c-source/src/main.ts`](packages/provider-c-source/src/main.ts),
+which is exactly that. Any other language just needs to read/write that JSON-RPC framing
+directly; see [`docs/ADDING-A-PROVIDER.md`](docs/ADDING-A-PROVIDER.md).
+
+Check a provider before wiring it up — against the schema, and against the real transport:
 
 ```bash
-npx aiviz-validate my-trace.json
+npx aiviz-validate my-trace.json                                         # a trace file
+npx aiviz-conformance --fixture fixture.json -- node dist/main.js        # a live process
 ```
 
-The client validates every trace it receives, so a provider that drifts from the schema produces
-a clear error rather than a broken panel.
+`aiviz-conformance` spawns your provider and runs it through `initialize`/`listFunctions`/
+`precheck`/`analyze` over the real stdio transport — the same checks the client implicitly
+depends on. The client also validates every trace it receives at runtime, so a provider that
+drifts from the schema produces a clear error rather than a broken panel.
+
+Full protocol reference: [`docs/PROTOCOL.md`](docs/PROTOCOL.md).
+
+## A second frontend: LLVM IR
+
+[`packages/provider-llvm-ir`](packages/provider-llvm-ir) is a second, complete provider —
+concrete proof that the trace protocol and `@aiviz/analysis-core`'s engine/domains are
+genuinely IR-agnostic, not just written to look that way while secretly assuming
+tree-sitter/C. It analyzes LLVM textual IR (`.ll`) directly, via a small hand-rolled parser (no
+tree-sitter, no native LLVM bindings — LLVM's textual IR is simple and regular enough that a
+line-oriented parser is more tractable than wiring up a grammar).
+
+It takes `.ll` files, not `.c` files: generate one yourself, then analyze it —
+
+```bash
+clang -S -emit-llvm -O0 -Xclang -disable-O0-optnone foo.c -o foo.ll
+npx aiviz-conformance --manifest packages/provider-llvm-ir/provider.json --fixture fixture.json
+```
+
+Same architecture, same trick as the C provider: lower to the exact same tiny `Cfg`/`Expr`/
+`Cond` shape, then hand the CFG to the unmodified engine. LLVM IR's one real novelty — SSA
+`phi` nodes at control-flow merges — turns out to need no engine changes at all: the engine
+already reconciles per-predecessor-edge state generically via `domain.join()`, so a phi
+becomes an ordinary assignment placed on each incoming edge rather than anything inside the
+merge block itself (see the package's `cfgbuilder.ts` for the detail, including how a
+predecessor with more than one phi-bearing successor — a "critical edge" — is handled by
+always splitting onto a small intermediate block, rather than special-casing it).
+
+Scoped to `i32`/`i1` scalars: `alloca`/`load`/`store` locals (what plain `clang -O0` output
+actually uses — no phi nodes at all, confirmed directly), `phi` nodes (for hand-written or
+optimized SSA-form IR), signed arithmetic and comparisons, and structured branches. No calls,
+pointer arithmetic beyond a bare local, floats, bitwise/shift ops, or unsigned arithmetic — see
+`provider-llvm-ir/src/precheck.ts` for the exact allow-list.
+
+Matching [`docs/ADDING-A-PROVIDER.md`](docs/ADDING-A-PROVIDER.md)'s own honesty about the
+current state of things: this is not yet wired into the VS Code panel's UI (the extension only
+launches its one bundled provider today, with no provider registry) — it's a standalone
+package, tested via its own suite and the conformance kit, run standalone the same way the
+guide describes for any new provider.
 
 ## Status
 
-Working: the protocol and its validator, the three v1 domains, the fixpoint engine, the
-tree-sitter C provider, and the VS Code client with CFG, stepping, state diffing, narration and
-widening-loss reporting.
+Working: the protocol, its validator, and the conformance kit; nine domains (five non-relational,
+four relational); the fixpoint engine; two complete providers — tree-sitter C and LLVM IR,
+validating the protocol/engine across two different IRs; and the VS Code client — CFG,
+stepping, state diffing, narration, widening-loss reporting, the lattice view (Hasse diagram for
+finite lattices, ascending chain otherwise), side-by-side domain comparison, and a relations
+section for the four relational domains' cross-variable facts.
 
-Not yet built: the lattice view, side-by-side domain comparison, the provider SDK and contributor
-docs, and the second (LLVM IR) provider that validates the protocol across two different IRs.
+Not yet built: wiring the LLVM IR provider into the VS Code panel itself (it's a standalone
+package today — see "A second frontend: LLVM IR" above), and marketplace publishing polish
+(icon, README GIFs).
 
 ## License
 

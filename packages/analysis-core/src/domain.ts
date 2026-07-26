@@ -46,6 +46,12 @@ export interface Domain<T> {
   latticeGraph?(): HasseDiagram | undefined;
   /** Domain-specific value lookup used by the lattice view. */
   valueOf?(s: T, variable: string): string | undefined;
+  /** Hard cap on tracked variables, for domains whose cost scales badly
+   * beyond a handful (e.g. Polyhedra's Fourier–Motzkin elimination). The
+   * provider checks this *before* calling `analyze`, returning the
+   * "unsupported" trace shape instead of attempting a slow or
+   * memory-heavy analysis. Absent means no domain-specific cap. */
+  maxVariables?: number;
 }
 
 /** A lattice over individual values, from which a full domain is derived. */

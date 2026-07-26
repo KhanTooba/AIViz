@@ -182,7 +182,7 @@ export class TraceUI {
   }
 }
 
-function makeNonce(): string {
+export function makeNonce(): string {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   let out = '';
   for (let i = 0; i < 32; i++) out += chars.charAt(Math.floor(Math.random() * chars.length));

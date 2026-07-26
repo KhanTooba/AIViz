@@ -78,6 +78,18 @@ function checkState(c: Checker, state: unknown, path: string): void {
       c.fail(`${path}.vars[${i}].kind`, 'expected "top" | "bottom" | "value"');
     }
   });
+
+  if (state.constraints !== undefined) {
+    if (!Array.isArray(state.constraints)) {
+      c.fail(`${path}.constraints`, 'expected an array of strings');
+    } else {
+      state.constraints.forEach((s, i) => {
+        if (typeof s !== 'string') {
+          c.fail(`${path}.constraints[${i}]`, 'expected a string');
+        }
+      });
+    }
+  }
 }
 
 function checkBlocks(c: Checker, blocks: Block[], entry: string): Set<string> {

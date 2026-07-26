@@ -208,6 +208,33 @@ test('accepts a trace with no latticeGraph — infinite lattices publish none', 
   assert.equal(result.valid, true);
 });
 
+test('accepts a state with relational constraints (a relational domain)', () => {
+  const result = mutate((t) => {
+    t.steps[0]!.after.constraints = ['i - total ≤ 5', 'total ≥ 0'];
+  });
+  assert.equal(result.valid, true, JSON.stringify(result.issues));
+});
+
+test('rejects a non-array constraints field', () => {
+  assertRejects(
+    mutate((t) => {
+      // @ts-expect-error deliberately malformed for the test
+      t.steps[0]!.after.constraints = 'i - total ≤ 5';
+    }),
+    'constraints'
+  );
+});
+
+test('rejects a constraints array containing a non-string', () => {
+  assertRejects(
+    mutate((t) => {
+      // @ts-expect-error deliberately malformed for the test
+      t.steps[0]!.after.constraints = ['i - total ≤ 5', 42];
+    }),
+    'constraints[1]'
+  );
+});
+
 test('accepts a well-formed latticeGraph', () => {
   const result = mutate((t) => {
     t.domain.latticeGraph = {

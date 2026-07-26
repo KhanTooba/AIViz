@@ -88,6 +88,13 @@ export interface DisplayState {
   /** `bottom` means unreachable; `vars` is empty in that case. */
   kind: 'bottom' | 'state';
   vars: VarValue[];
+  /**
+   * Cross-variable facts a relational domain wants to surface, e.g.
+   * `i - total ≤ 5`. A non-relational domain (Intervals, Sign, ...) never
+   * sets this — each variable's own value is already the whole story for
+   * those. Absent means "nothing to show here", not "no constraints exist".
+   */
+  constraints?: string[];
 }
 
 export interface VarMeta {

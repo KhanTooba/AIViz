@@ -8,4 +8,5 @@ node_modules/**
 **/*.map
 **/*.ts
 dist/preview.html
+dist/compare-preview.html
 dist/fixtures/**

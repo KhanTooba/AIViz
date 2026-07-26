@@ -1,15 +1,6 @@
-import type { AnalysisTrace, DisplayState, Step, VarValue } from '@aiviz/trace-protocol';
+import { isBlockOwnState, type AnalysisTrace, type DisplayState, type Step, type VarValue } from '@aiviz/trace-protocol';
 import { CfgView, formatLines } from './cfg.js';
 import { LatticeView, type ChainItem } from './lattice.js';
-
-/** Step kinds whose value at a block is worth a point on the ascending chain. */
-const CHAIN_STEP_KINDS: ReadonlySet<Step['kind']> = new Set([
-  'transfer',
-  'join',
-  'widen',
-  'narrow',
-  'stabilize',
-]);
 
 declare function acquireVsCodeApi(): {
   postMessage(msg: unknown): void;
@@ -454,7 +445,21 @@ class App {
       );
       table.append(row);
     }
-    this.stateEl.replaceChildren(table);
+
+    const constraints = step.after.constraints;
+    if (constraints && constraints.length > 0) {
+      const list = h('ul', { class: 'relations-list' });
+      for (const c of constraints) list.append(h('li', { class: 'relation' }, c));
+      const relations = h(
+        'div',
+        { class: 'relations' },
+        h('div', { class: 'relations-title muted' }, 'Relations'),
+        list
+      );
+      this.stateEl.replaceChildren(table, relations);
+    } else {
+      this.stateEl.replaceChildren(table);
+    }
   }
 
   /**
@@ -521,7 +526,7 @@ class App {
     }
 
     const items: ChainItem[] = t.steps
-      .filter((s) => s.blockId === step.blockId && CHAIN_STEP_KINDS.has(s.kind))
+      .filter((s) => s.blockId === step.blockId && isBlockOwnState(s))
       .flatMap((s) => {
         const v = s.after.vars.find((x) => x.name === varName);
         return v ? [{ label: v.repr, kind: s.kind, stepIndex: s.index }] : [];

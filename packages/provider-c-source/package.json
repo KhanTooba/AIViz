@@ -22,6 +22,7 @@
   },
   "dependencies": {
     "@aiviz/analysis-core": "0.1.0",
+    "@aiviz/provider-sdk": "0.1.0",
     "@aiviz/trace-protocol": "0.1.0",
     "tree-sitter-c": "^0.24.1",
     "web-tree-sitter": "^0.26.11"

@@ -1,0 +1,8 @@
+{
+  "id": "llvm-ir",
+  "name": "LLVM IR",
+  "version": "0.1.0",
+  "languages": ["llvm-ir"],
+  "command": "node",
+  "args": ["./dist/main.js"]
+}

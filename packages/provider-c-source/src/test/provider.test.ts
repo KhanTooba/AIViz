@@ -333,7 +333,7 @@ int f(void) {
   return i;
 }
 `;
-  for (const domain of ['intervals', 'sign', 'constprop']) {
+  for (const domain of ['intervals', 'sign', 'constprop', 'parity', 'congruence']) {
     const trace = await analyze(source, 'f', domain);
     assert.deepEqual(validateTrace(trace).issues, [], `${domain} produced an invalid trace`);
     assert.equal(trace.summary.converged, true, `${domain} did not converge`);
@@ -398,6 +398,23 @@ test('reports a missing function clearly', async () => {
   const trace = await analyze('int f(void) { return 0; }', 'nope');
   assert.deepEqual(validateTrace(trace).issues, []);
   assert.match(trace.diagnostics[0]!.message, /no function named/);
+});
+
+test('a function with more variables than Polyhedra supports gets a clear, valid "unsupported" trace, not a slow or crashed analysis', async () => {
+  // Polyhedra's Fourier–Motzkin elimination cost scales badly beyond a
+  // handful of variables (see domains/polyhedra.ts's maxVariables), so the
+  // provider must catch this *before* calling analyze(), the same way it
+  // already catches unsupported syntax via precheck.
+  const trace = await analyze(
+    'int f(void) { int a=0,b=0,c=0,d=0,e=0,g=0,h=0; return a+b+c+d+e+g+h; }',
+    'f',
+    'polyhedra'
+  );
+  assert.deepEqual(validateTrace(trace).issues, []);
+  assert.equal(trace.summary.converged, false);
+  assert.equal(trace.steps.length, 0);
+  assert.match(trace.diagnostics[0]!.message, /Polyhedra/);
+  assert.match(trace.diagnostics[0]!.message, /variables/);
 });
 
 test('block line sets never claim a line the block does not own', async () => {

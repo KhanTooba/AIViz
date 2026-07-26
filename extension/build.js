@@ -65,6 +65,12 @@ const builds = [
     format: 'iife',
   },
   {
+    entryPoints: ['src/webview/compareMain.ts'],
+    outfile: 'dist/compareWebview.js',
+    platform: 'browser',
+    format: 'iife',
+  },
+  {
     entryPoints: ['src/webview/webview.css'],
     outfile: 'dist/webview.css',
   },

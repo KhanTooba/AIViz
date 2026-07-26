@@ -115,6 +115,19 @@ export class CSourceProvider implements AnalysisProvider {
     }
 
     const cfg = buildCfg(fn);
+    if (domain.maxVariables !== undefined && cfg.variables.length > domain.maxVariables) {
+      return unsupportedTrace(req, [
+        {
+          severity: 'error',
+          code: 'domain.tooManyVariables',
+          message:
+            `${domain.name} is hand-rolled and scoped to at most ${domain.maxVariables} variables ` +
+            `for this function (it declares ${cfg.variables.length}); pick a domain without a variable cap, ` +
+            `or simplify the function`,
+          line: fn.startPosition.row + 1,
+        },
+      ]);
+    }
     return analyze(
       cfg,
       domain,

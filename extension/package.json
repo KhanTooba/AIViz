@@ -6,6 +6,7 @@
   "license": "MIT",
   "publisher": "aiviz",
   "private": true,
+  "icon": "media/icon.png",
   "type": "module",
   "engines": {
     "vscode": "^1.90.0"
@@ -21,6 +22,12 @@
         "title": "AIViz: Analyze Current Function",
         "category": "AIViz",
         "icon": "$(graph)"
+      },
+      {
+        "command": "aiviz.compare",
+        "title": "AIViz: Compare Domains",
+        "category": "AIViz",
+        "icon": "$(diff)"
       },
       {
         "command": "aiviz.next",
@@ -47,6 +54,11 @@
       "editor/title": [
         {
           "command": "aiviz.analyze",
+          "when": "editorLangId == c",
+          "group": "navigation"
+        },
+        {
+          "command": "aiviz.compare",
           "when": "editorLangId == c",
           "group": "navigation"
         }
@@ -99,7 +111,7 @@
   "scripts": {
     "build": "node build.js",
     "watch": "node build.js --watch",
-    "package": "npm run build && vsce package --no-dependencies --allow-missing-repository --out aiviz.vsix"
+    "package": "npm run build && vsce package --no-dependencies --allow-missing-repository --no-rewrite-relative-links --out aiviz.vsix"
   },
   "dependencies": {
     "@aiviz/trace-protocol": "0.1.0",
