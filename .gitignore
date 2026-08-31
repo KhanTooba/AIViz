@@ -6,3 +6,9 @@ out/
 *.tsbuildinfo
 .DS_Store
 artifact/results/
+paper/main.pdf
+paper/main.fls
+paper/main.log
+paper/main.out
+paper/main.synctex.gz
+paper/main.aux
