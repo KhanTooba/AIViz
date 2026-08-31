@@ -35,6 +35,9 @@ From a repository checkout with Node 20 or newer and dependencies installed (`np
 npm run artifact:smoke
 npm run artifact:providers
 npm run artifact:external-domain
+npm run artifact:determinism
+npm run artifact:domain-failures
+npm run artifact:benchmark
 ```
 
 Each command writes `artifact/results/<name>.json` (provenance and exit statuses) and
@@ -46,22 +49,25 @@ the final archive will contain evidence regenerated from the frozen `v0.2.0` rev
 | `artifact:smoke` | AIVIZ-C1 | Build, schema/protocol validation, and deterministic engine tests pass. |
 | `artifact:providers` | AIVIZ-C2 | The packaged C and LLVM provider executables pass real stdio checks. |
 | `artifact:external-domain` | AIVIZ-C3 | The independent example validates and is loaded by the packaged C provider. |
+| `artifact:determinism` | AIVIZ-C1 | Ten repeated analyses produce one SHA-256 trace hash. |
+| `artifact:domain-failures` | AIVIZ-E2 | Invalid API version, built-in-ID collision, and module exception are diagnosed while a built-in analysis still converges. |
+| `artifact:benchmark` | AIVIZ-E3 | Warm-cache analysis latency, trace bytes, steps, and iterations for the fixed C/LLVM corpus. |
 
-The remaining ledger entries are intentionally unavailable until Phase 6 supplies their measured
-corpora and clean-install harness. See [CLAIMS.md](CLAIMS.md) for claim wording and release
-evidence requirements.
+Clean-install, concrete-containment, and browser-rendering evidence remain release-time checks.
+See [CLAIMS.md](CLAIMS.md) for claim wording and evidence requirements.
 
 ## Release checklist
 
 Before publishing, execute and record the following at the frozen `v0.2.0` revision:
 
-- [ ] Run the three commands above and preserve their JSON/log evidence.
+- [ ] Run the six commands above and preserve their JSON/log evidence.
 - [ ] Build the VSIX with `npm run package -w extension`; record its SHA-256 and size.
 - [ ] On a clean VS Code profile, time the five-minute tutorial using the VSIX; repeat on the
   supported operating systems and record VS Code version, OS, and architecture.
 - [ ] Verify the Marketplace package and VSIX have the same version and byte-identical packaged
   contents where applicable.
-- [ ] Complete the Phase 6 robustness, determinism, containment, and benchmark commands.
+- [ ] Add clean-install, concrete-containment, and browser-rendering measurements before final
+  release evidence is frozen.
 - [ ] Ensure every paper claim cites a claim ID and generated result, and that the paper, VSIX,
   example package, demo video, archive, and Git tag all say `0.2.0`.
 

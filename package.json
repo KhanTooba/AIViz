@@ -14,6 +14,9 @@
     "artifact:smoke": "node artifact/run.mjs smoke",
     "artifact:providers": "node artifact/run.mjs providers",
     "artifact:external-domain": "node artifact/run.mjs external-domain",
+    "artifact:determinism": "node artifact/run.mjs determinism",
+    "artifact:benchmark": "node artifact/run.mjs benchmark",
+    "artifact:domain-failures": "node artifact/run.mjs domain-failures",
     "clean": "rm -rf packages/*/dist extension/dist extension/out"
   },
   "devDependencies": {

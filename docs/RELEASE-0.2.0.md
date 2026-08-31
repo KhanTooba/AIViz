@@ -43,8 +43,8 @@ abstract domains are not presented as novel.
   matching VSIX and run a bundled example without installing this repository's dependencies.
 - **AIVIZ-E2 — Isolation and failure handling.** Workspace domain code runs only in a trusted
   workspace and inside the provider subprocess. Invalid manifests, incompatible API versions,
-  ID collisions, exceptions, and timeouts produce diagnostics without disabling built-in
-  domains. The subprocess boundary is crash isolation, not a security sandbox.
+  ID collisions, and exceptions produce diagnostics without disabling built-in domains. The
+  subprocess boundary is crash isolation, not a security sandbox.
 - **AIVIZ-E3 — Interactive scale.** On the declared benchmark corpus and reference machine, the
   extension remains usable according to reported analysis latency, trace size, step count, and
   rendering measurements. The paper will report measured values rather than promise an

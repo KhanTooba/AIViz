@@ -48,6 +48,18 @@ const checks = {
       ],
     ],
   },
+  determinism: {
+    claimIds: ['AIVIZ-C1'],
+    commands: [['npm', ['run', 'build']], ['node', ['artifact/evaluate.mjs', 'determinism']]],
+  },
+  benchmark: {
+    claimIds: ['AIVIZ-E3'],
+    commands: [['npm', ['run', 'build']], ['node', ['artifact/evaluate.mjs', 'benchmark']]],
+  },
+  'domain-failures': {
+    claimIds: ['AIVIZ-E2'],
+    commands: [['npm', ['run', 'build']], ['node', ['artifact/evaluate.mjs', 'domain-failures']]],
+  },
 };
 
 const name = process.argv[2];
