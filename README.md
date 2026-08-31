@@ -188,6 +188,12 @@ Use **AIViz: Create Custom Domain** for an in-editor scaffold, or use the `aiviz
 and `aiviz-domain check` CLI for terminal-based authoring. A separately packaged, copyable
 example lives in [`examples/zero-nonzero-domain`](examples/zero-nonzero-domain).
 
+## Reviewer artifact
+
+The five-minute installed-extension walkthrough, repeatable claim checks, and release checklist
+are in [`artifact/README.md`](artifact/README.md). The commands generate local evidence only;
+they do not tag, upload, or publish anything.
+
 ## A second frontend: LLVM IR
 
 [`packages/provider-llvm-ir`](packages/provider-llvm-ir) is a second, complete provider —

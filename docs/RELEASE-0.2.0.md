@@ -3,7 +3,8 @@
 This document defines the release that will accompany the SANER 2027 Tool Demo submission. It
 is a scope boundary, not a statement that the current development build already satisfies every
 item. The machine-readable target version and deadlines live in
-[`artifact/release.json`](../artifact/release.json).
+[`artifact/release.json`](../artifact/release.json). The reviewer tutorial, implemented artifact
+commands, and pre-publication checklist live in [`artifact/README.md`](../artifact/README.md).
 
 ## Submission contract
 

@@ -11,6 +11,9 @@
   "scripts": {
     "build": "npm run build -w packages/trace-protocol -w packages/analysis-core -w packages/domain-sdk -w packages/provider-sdk -w packages/provider-c-source -w packages/provider-llvm-ir -w extension",
     "test": "npm run test --workspaces --if-present",
+    "artifact:smoke": "node artifact/run.mjs smoke",
+    "artifact:providers": "node artifact/run.mjs providers",
+    "artifact:external-domain": "node artifact/run.mjs external-domain",
     "clean": "rm -rf packages/*/dist extension/dist extension/out"
   },
   "devDependencies": {

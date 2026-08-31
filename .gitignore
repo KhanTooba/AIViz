@@ -6,3 +6,4 @@ out/
 *.tsbuildinfo
 .DS_Store
 paper/
+artifact/results/
