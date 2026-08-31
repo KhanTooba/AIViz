@@ -60,6 +60,10 @@ const checks = {
     claimIds: ['AIVIZ-E2'],
     commands: [['npm', ['run', 'build']], ['node', ['artifact/evaluate.mjs', 'domain-failures']]],
   },
+  'release-preflight': {
+    claimIds: [],
+    commands: [['node', ['artifact/release-check.mjs']]],
+  },
 };
 
 const name = process.argv[2];

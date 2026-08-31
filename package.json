@@ -17,6 +17,7 @@
     "artifact:determinism": "node artifact/run.mjs determinism",
     "artifact:benchmark": "node artifact/run.mjs benchmark",
     "artifact:domain-failures": "node artifact/run.mjs domain-failures",
+    "artifact:release-preflight": "node artifact/run.mjs release-preflight",
     "clean": "rm -rf packages/*/dist extension/dist extension/out"
   },
   "devDependencies": {

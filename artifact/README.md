@@ -38,6 +38,7 @@ npm run artifact:external-domain
 npm run artifact:determinism
 npm run artifact:domain-failures
 npm run artifact:benchmark
+npm run artifact:release-preflight
 ```
 
 Each command writes `artifact/results/<name>.json` (provenance and exit statuses) and
@@ -52,6 +53,7 @@ the final archive will contain evidence regenerated from the frozen `v0.2.0` rev
 | `artifact:determinism` | AIVIZ-C1 | Ten repeated analyses produce one SHA-256 trace hash. |
 | `artifact:domain-failures` | AIVIZ-E2 | Invalid API version, built-in-ID collision, and module exception are diagnosed while a built-in analysis still converges. |
 | `artifact:benchmark` | AIVIZ-E3 | Warm-cache analysis latency, trace bytes, steps, and iterations for the fixed C/LLVM corpus. |
+| `artifact:release-preflight` | release integrity | Reports every source-package version before the final frozen version check. |
 
 Clean-install, concrete-containment, and browser-rendering evidence remain release-time checks.
 See [CLAIMS.md](CLAIMS.md) for claim wording and evidence requirements.

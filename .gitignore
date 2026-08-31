@@ -5,5 +5,4 @@ out/
 .vscode-test/
 *.tsbuildinfo
 .DS_Store
-paper/
 artifact/results/
