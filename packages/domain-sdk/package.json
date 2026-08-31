@@ -1,0 +1,27 @@
+{
+  "name": "@aiviz/domain-sdk",
+  "version": "0.1.0",
+  "description": "Manifest types, validation, and workspace loading for AIViz value domains",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./schema/domain.schema.json": "./schema/domain.schema.json"
+  },
+  "files": ["dist", "schema"],
+  "bin": {
+    "aiviz-domain": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "node --test dist/test/*.test.js"
+  },
+  "dependencies": {
+    "@aiviz/analysis-core": "0.1.0"
+  }
+}

@@ -7,7 +7,8 @@
  * itself is shared with every AIViz provider — see @aiviz/provider-sdk.
  */
 
+import { domainDirectoriesFromEnvironment } from '@aiviz/domain-sdk';
 import { serveOverStdio } from '@aiviz/provider-sdk';
 import { LlvmIrProvider } from './provider.js';
 
-serveOverStdio(new LlvmIrProvider());
+serveOverStdio(new LlvmIrProvider({ domainDirectories: domainDirectoriesFromEnvironment() }));

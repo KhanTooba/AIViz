@@ -1,12 +1,19 @@
 import * as esbuild from 'esbuild';
-import { cpSync, mkdirSync } from 'node:fs';
+import { cpSync, mkdirSync, readFileSync, rmSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 
 const require = createRequire(import.meta.url);
 const watch = process.argv.includes('--watch');
+const providers = JSON.parse(readFileSync('providers.json', 'utf8'));
 
-mkdirSync('dist/provider', { recursive: true });
+// Provider output changed from a single C bundle to an id-keyed directory in
+// v0.2.0. Clear only that generated directory so a stale provider can never be
+// packaged by accident.
+rmSync('dist/provider', { recursive: true, force: true });
+rmSync('dist/providers', { recursive: true, force: true });
+mkdirSync('dist/providers/c-source', { recursive: true });
+mkdirSync('dist/providers/llvm-ir', { recursive: true });
 
 // The reference trace ships inside the extension so the panel has something to
 // render even if the provider cannot start.
@@ -27,13 +34,26 @@ for (const [spec, name] of [
   ['web-tree-sitter', 'web-tree-sitter.wasm'],
 ]) {
   const dir = dirname(require.resolve(spec));
-  cpSync(join(dir, name), join('dist/provider', name));
+  cpSync(join(dir, name), join('dist/providers/c-source', name));
+}
+
+const providerEntries = new Map([
+  ['c-source', '../packages/provider-c-source/src/main.ts'],
+  ['llvm-ir', '../packages/provider-llvm-ir/src/main.ts'],
+]);
+for (const provider of providers) {
+  if (!providerEntries.has(provider.id)) {
+    throw new Error(`providers.json declares ${provider.id}, but build.js has no entry point for it`);
+  }
+}
+if (providerEntries.size !== providers.length) {
+  throw new Error('build.js and providers.json disagree about the bundled provider count');
 }
 
 /**
- * Three bundles with different targets:
+ * Bundles with three different targets:
  *  - the extension host runs in Node and must be CommonJS with `vscode` external
- *  - the provider is a standalone Node process spawned by the extension
+ *  - each provider is a standalone Node process spawned by the extension
  *  - the webview runs in a browser sandbox with no module loader, so IIFE
  */
 const builds = [
@@ -46,7 +66,7 @@ const builds = [
   },
   {
     entryPoints: ['../packages/provider-c-source/src/main.ts'],
-    outfile: 'dist/provider/main.cjs',
+    outfile: 'dist/providers/c-source/main.cjs',
     platform: 'node',
     format: 'cjs',
     // web-tree-sitter's Node glue calls `createRequire(import.meta.url)`, and
@@ -57,6 +77,12 @@ const builds = [
       js: "const __importMetaUrl = require('node:url').pathToFileURL(__filename).href;",
     },
     define: { 'import.meta.url': '__importMetaUrl' },
+  },
+  {
+    entryPoints: ['../packages/provider-llvm-ir/src/main.ts'],
+    outfile: 'dist/providers/llvm-ir/main.cjs',
+    platform: 'node',
+    format: 'cjs',
   },
   {
     entryPoints: ['src/webview/main.ts'],

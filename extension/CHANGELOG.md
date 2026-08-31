@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased — target 0.2.0
+
+- Bundle both the source-level C and textual LLVM IR providers in the extension.
+- Select the provider automatically from the document language or `.c`/`.ll` extension.
+- Analyze, replay, and compare LLVM IR functions through the same UI used for C.
+- Smoke-test both packaged provider executables over the real stdio transport.
+- Load compatible workspace value domains from `.aiviz/domains/` only after Workspace Trust,
+  with manifest/API/lattice validation, diagnostics, file-change prompts, and **Reload Domains**.
+- Add **Create Custom Domain**, the `aiviz-domain` create/check CLI, and a separately packaged
+  Zero / Nonzero example domain that is exercised through the bundled provider.
+
 ## 0.1.0
 
 Initial release.
@@ -20,6 +31,5 @@ Initial release.
 - Side-by-side domain comparison on the same function.
 - A lattice view: Hasse diagrams for finite-lattice domains, the actual ascending chain
   traversed for infinite ones.
-- One reference analysis provider (source-level C via tree-sitter), plus a second, standalone
-  provider analyzing LLVM IR directly — proof the trace protocol and engine are genuinely
-  provider-agnostic (not yet wired into this panel; see the project's own docs).
+- One reference analysis provider (source-level C via tree-sitter), plus a second standalone
+  provider analyzing LLVM IR directly.

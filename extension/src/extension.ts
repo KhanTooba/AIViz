@@ -1,30 +1,28 @@
 import * as vscode from 'vscode';
-import { existsSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import * as path from 'node:path';
 import type { AnalysisTrace, ProviderInfo } from '@aiviz/trace-protocol';
 import { validateTrace } from '@aiviz/trace-protocol';
 import { ProviderClient } from './providerClient.js';
+import { domainManifestTemplate, domainModuleTemplate } from './domainScaffold.js';
+import {
+  BUNDLED_PROVIDERS,
+  providerForDocument,
+  resolveProviderLaunch,
+  supportedDocumentDescription,
+  type BundledProvider,
+} from './providerRegistry.js';
 import { TraceUI, makeNonce } from './traceUI.js';
 
-/**
- * Locates the bundled provider.
- *
- * Checked in order: packaged inside the extension, then the monorepo layout, so
- * both an installed .vsix and `F5` from the repo work.
- */
-function resolveProviderEntry(extensionPath: string): string | undefined {
-  return [
-    path.join(extensionPath, 'dist', 'provider', 'main.cjs'),
-    path.join(extensionPath, '..', 'packages', 'provider-c-source', 'dist', 'main.js'),
-    path.join(extensionPath, 'node_modules', '@aiviz', 'provider-c-source', 'dist', 'main.js'),
-    path.join(extensionPath, '..', 'node_modules', '@aiviz', 'provider-c-source', 'dist', 'main.js'),
-  ].find((p) => existsSync(p));
-}
-
 export function activate(context: vscode.ExtensionContext): void {
-  let client: ProviderClient | undefined;
-  let info: ProviderInfo | undefined;
-  let lastDomain = 'intervals';
+  const clients = new Map<string, ProviderClient>();
+  const providerInfos = new Map<string, ProviderInfo>();
+  const lastDomains = new Map<string, string>();
+  const reportedDiagnostics = new Map<string, string>();
+  const domainOutput = vscode.window.createOutputChannel('AIViz Domains');
+  let domainWatchers: vscode.Disposable[] = [];
+  let domainChangeTimer: NodeJS.Timeout | undefined;
+  let domainReloadPromptVisible = false;
   let panel: vscode.WebviewPanel | undefined;
   // Bumped on every analysis; a request only applies its result if it is still
   // the most recent one requested. Without this, a slow analysis triggered by
@@ -33,22 +31,95 @@ export function activate(context: vscode.ExtensionContext): void {
 
   const ui = new TraceUI(context.extensionUri, (fn, domain) => runAnalysis(fn, domain));
 
-  const getClient = (): ProviderClient => {
-    if (client) return client;
-    const entry = resolveProviderEntry(context.extensionPath);
-    if (!entry) {
-      throw new Error(
-        'could not find the bundled C provider — run `npm run build` in the repo root.'
+  /** Only trusted workspace folders are passed to provider subprocesses. The
+   * extension host itself never imports a workspace domain module. */
+  const workspaceDomainDirectories = (): string[] => {
+    if (!vscode.workspace.isTrusted) return [];
+    return (vscode.workspace.workspaceFolders ?? []).map((folder) =>
+      path.join(folder.uri.fsPath, '.aiviz', 'domains')
+    );
+  };
+
+  const disposeProviderClients = (): void => {
+    for (const client of clients.values()) client.dispose();
+    clients.clear();
+    providerInfos.clear();
+    reportedDiagnostics.clear();
+  };
+
+  const showDomainDiagnostics = (): void => {
+    domainOutput.show(true);
+  };
+
+  const reportDomainDiagnostics = (provider: BundledProvider, info: ProviderInfo): void => {
+    const diagnostics = info.domainDiagnostics ?? [];
+    const signature = JSON.stringify(diagnostics);
+    if (reportedDiagnostics.get(provider.id) === signature) return;
+    reportedDiagnostics.set(provider.id, signature);
+
+    const workspaceCount = info.domains.filter((domain) => domain.origin === 'workspace').length;
+    domainOutput.appendLine(
+      `${provider.name}: ${workspaceCount} workspace domain${workspaceCount === 1 ? '' : 's'} loaded.`
+    );
+    for (const diagnostic of diagnostics) {
+      domainOutput.appendLine(
+        `[${diagnostic.severity}] ${diagnostic.code}: ${diagnostic.message}` +
+          (diagnostic.path ? ` (${diagnostic.path})` : '')
       );
     }
-    client = new ProviderClient({
+    if (diagnostics.length > 0) {
+      void vscode.window
+        .showWarningMessage(
+          `AIViz: ${diagnostics.length} workspace domain${diagnostics.length === 1 ? '' : 's'} could not be loaded for ${provider.name}.`,
+          'Show Domain Diagnostics'
+        )
+        .then((choice) => {
+          if (choice === 'Show Domain Diagnostics') showDomainDiagnostics();
+        });
+    }
+  };
+
+  const getClient = (provider: BundledProvider): ProviderClient => {
+    const existing = clients.get(provider.id);
+    if (existing) return existing;
+
+    const launch = resolveProviderLaunch(
+      context.extensionPath,
+      provider,
+      workspaceDomainDirectories()
+    );
+    if (!launch) {
+      throw new Error(
+        `could not find the bundled ${provider.name} provider — run \`npm run build\` in the repo root.`
+      );
+    }
+    const client = new ProviderClient({
       command: process.execPath,
-      args: [entry],
-      // The provider cannot resolve node_modules once bundled into the .vsix,
-      // so tell it where the tree-sitter wasm files were copied.
-      env: { AIVIZ_WASM_DIR: path.join(context.extensionPath, 'dist', 'provider') },
+      args: [launch.entry],
+      env: launch.env,
     });
+    clients.set(provider.id, client);
     return client;
+  };
+
+  const getProvider = async (
+    provider: BundledProvider
+  ): Promise<{ client: ProviderClient; info: ProviderInfo }> => {
+    const client = getClient(provider);
+    let info = providerInfos.get(provider.id);
+    if (!info) {
+      info = await client.initialize();
+      if (info.id !== provider.id) {
+        client.dispose();
+        clients.delete(provider.id);
+        throw new Error(
+          `bundled provider identity mismatch: expected ${provider.id}, received ${info.id}`
+        );
+      }
+      providerInfos.set(provider.id, info);
+      reportDomainDiagnostics(provider, info);
+    }
+    return { client, info };
   };
 
   /** Opens the trace beside the editor — the right-hand column. */
@@ -82,8 +153,8 @@ export function activate(context: vscode.ExtensionContext): void {
   }
 
   /**
-   * @param options.silent Used for the save-triggered refresh: no "open a C
-   *   file first" warning if the saved file isn't the one being analyzed, and
+   * @param options.silent Used for the save-triggered refresh: no "open a
+   *   supported file first" warning if the saved file isn't the one being analyzed, and
    *   failures are shown in the panel rather than as an error toast — an
    *   unsupported program is an expected outcome of editing, not a bug.
    */
@@ -93,18 +164,25 @@ export function activate(context: vscode.ExtensionContext): void {
     options: { doc?: vscode.TextDocument; silent?: boolean } = {}
   ): Promise<void> {
     const editor = vscode.window.activeTextEditor;
+    const panelRequested = fnName !== undefined || domainId !== undefined;
+    const currentTraceDocument = vscode.workspace.textDocuments.find(
+      (doc) => doc.uri.fsPath === ui.currentFile() && providerForDocument(doc) !== undefined
+    );
     const doc =
       options.doc ??
-      (editor?.document.languageId === 'c'
-        ? editor.document
-        : vscode.workspace.textDocuments.find(
-            (d) => d.uri.fsPath === ui.currentFile() && d.languageId === 'c'
-          ));
+      (panelRequested ? currentTraceDocument : undefined) ??
+      (editor && providerForDocument(editor.document) ? editor.document : currentTraceDocument);
 
     if (!doc) {
-      if (!options.silent) void vscode.window.showWarningMessage('AIViz: open a C file first.');
+      if (!options.silent) {
+        void vscode.window.showWarningMessage(
+          `AIViz: open a supported ${supportedDocumentDescription()} first.`
+        );
+      }
       return;
     }
+    const provider = providerForDocument(doc);
+    if (!provider) return;
 
     // Always bring the panel to front for a manual run; a save-triggered
     // refresh should update in place without stealing focus or popping the
@@ -117,10 +195,12 @@ export function activate(context: vscode.ExtensionContext): void {
     const source = doc.getText();
 
     try {
-      const c = getClient();
-      info ??= await c.initialize();
+      const { client: c, info } = await getProvider(provider);
 
-      ui.setStatus(options.silent ? 'Re-analysing…' : 'Analysing', true);
+      ui.setStatus(
+        options.silent ? `Re-analysing with ${info.name}…` : `Analysing with ${info.name}…`,
+        true
+      );
       const { functions } = await c.listFunctions(file, source);
       if (myGeneration !== generation) return; // superseded by a newer request
 
@@ -136,8 +216,12 @@ export function activate(context: vscode.ExtensionContext): void {
       const chosen =
         functions.find((f) => f.name === fnName)?.name ?? atCaret?.name ?? functions[0]!.name;
 
-      const domain = domainId ?? lastDomain;
-      lastDomain = domain;
+      const requestedDomain = domainId ?? lastDomains.get(provider.id) ?? 'intervals';
+      const domain = info.domains.some((candidate) => candidate.id === requestedDomain)
+        ? requestedDomain
+        : info.domains[0]?.id;
+      if (!domain) throw new Error(`${info.name} did not advertise any abstract domains`);
+      lastDomains.set(provider.id, domain);
 
       const cfg = vscode.workspace.getConfiguration('aiviz');
       const trace = await c.analyze({
@@ -166,7 +250,7 @@ export function activate(context: vscode.ExtensionContext): void {
 
       ui.setTrace(trace, {
         functions,
-        domains: (info?.domains ?? []).map((d) => ({ id: d.id, name: d.name })),
+        domains: info.domains.map((d) => ({ id: d.id, name: d.name })),
         selectedFunction: chosen,
         selectedDomain: domain,
       });
@@ -250,18 +334,23 @@ export function activate(context: vscode.ExtensionContext): void {
   async function runCompare(): Promise<void> {
     const editor = vscode.window.activeTextEditor;
     const doc =
-      editor?.document.languageId === 'c'
+      editor && providerForDocument(editor.document)
         ? editor.document
-        : vscode.workspace.textDocuments.find((d) => d.languageId === 'c');
+        : vscode.workspace.textDocuments.find((candidate) =>
+            providerForDocument(candidate)
+          );
     if (!doc) {
-      void vscode.window.showWarningMessage('AIViz: open a C file first.');
+      void vscode.window.showWarningMessage(
+        `AIViz: open a supported ${supportedDocumentDescription()} first.`
+      );
       return;
     }
+    const provider = providerForDocument(doc);
+    if (!provider) return;
 
     try {
-      const c = getClient();
-      info ??= await c.initialize();
-      const domains = info?.domains ?? [];
+      const { client: c, info } = await getProvider(provider);
+      const domains = info.domains;
       if (domains.length < 2) {
         void vscode.window.showWarningMessage('AIViz: this provider offers fewer than two domains.');
         return;
@@ -350,10 +439,166 @@ export function activate(context: vscode.ExtensionContext): void {
     }
   }
 
+  /** Restart providers rather than importing changed workspace code in place.
+   * That clears Node's module cache and makes a reload deterministic. */
+  async function reloadDomains(): Promise<void> {
+    if (!vscode.workspace.isTrusted) {
+      void vscode.window.showWarningMessage(
+        'AIViz: workspace domains are disabled until you trust this workspace.'
+      );
+      return;
+    }
+
+    generation++;
+    disposeProviderClients();
+    domainOutput.clear();
+    const initialized = await Promise.allSettled(BUNDLED_PROVIDERS.map((provider) => getProvider(provider)));
+    const failures = initialized.filter(
+      (result): result is PromiseRejectedResult => result.status === 'rejected'
+    );
+    if (failures.length > 0) {
+      const detail = failures
+        .map((failure) =>
+          failure.reason instanceof Error ? failure.reason.message : String(failure.reason)
+        )
+        .join('; ');
+      void vscode.window.showErrorMessage(`AIViz: could not reload domains — ${detail}`);
+      return;
+    }
+
+    const current = vscode.workspace.textDocuments.find(
+      (doc) => doc.uri.fsPath === ui.currentFile() && providerForDocument(doc) !== undefined
+    );
+    if (current && ui.hasSurface) {
+      const selection = ui.currentSelection();
+      await runAnalysis(selection?.function, selection?.domain, { doc: current, silent: true });
+    }
+    void vscode.window.showInformationMessage('AIViz: workspace domains reloaded.');
+  }
+
+  async function createWorkspaceDomain(): Promise<void> {
+    if (!vscode.workspace.isTrusted) {
+      void vscode.window.showWarningMessage(
+        'AIViz: trust the workspace before creating a domain that the providers will execute.'
+      );
+      return;
+    }
+    const folders = vscode.workspace.workspaceFolders ?? [];
+    if (folders.length === 0) {
+      void vscode.window.showWarningMessage('AIViz: open a workspace folder before creating a domain.');
+      return;
+    }
+    const folder =
+      folders.length === 1
+        ? folders[0]!
+        : await vscode.window.showQuickPick(
+            folders.map((candidate) => ({ label: candidate.name, folder: candidate })),
+            { placeHolder: 'Workspace folder for the new AIViz domain' }
+          ).then((picked) => picked?.folder);
+    if (!folder) return;
+
+    const id = await vscode.window.showInputBox({
+      prompt: 'Domain ID',
+      placeHolder: 'zero-nonzero',
+      validateInput: (value) =>
+        /^[a-z][a-z0-9-]*$/.test(value) ? undefined : 'Use lowercase letters, digits, and hyphens.',
+    });
+    if (!id) return;
+    const name = await vscode.window.showInputBox({
+      prompt: 'Domain display name',
+      value: id.replace(/-/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase()),
+      validateInput: (value) => (value.trim() ? undefined : 'A display name is required.'),
+    });
+    if (!name) return;
+
+    const directory = vscode.Uri.joinPath(folder.uri, '.aiviz', 'domains', id);
+    try {
+      await vscode.workspace.fs.stat(directory);
+      void vscode.window.showWarningMessage(`AIViz: ${directory.fsPath} already exists.`);
+      return;
+    } catch {
+      // Expected for a new domain; createDirectory also creates the parents.
+    }
+    try {
+      await vscode.workspace.fs.createDirectory(directory);
+      await vscode.workspace.fs.writeFile(
+        vscode.Uri.joinPath(directory, 'domain.json'),
+        Buffer.from(domainManifestTemplate(id, name.trim()), 'utf8')
+      );
+      await vscode.workspace.fs.writeFile(
+        vscode.Uri.joinPath(directory, 'domain.mjs'),
+        Buffer.from(domainModuleTemplate(id, name.trim()), 'utf8')
+      );
+      const choice = await vscode.window.showInformationMessage(
+        `AIViz: created ${id}. Reload domains to make it selectable.`,
+        'Reload Domains',
+        'Open domain.mjs'
+      );
+      if (choice === 'Reload Domains') await reloadDomains();
+      if (choice === 'Open domain.mjs') {
+        await vscode.window.showTextDocument(vscode.Uri.joinPath(directory, 'domain.mjs'));
+      }
+    } catch (error) {
+      void vscode.window.showErrorMessage(
+        `AIViz: could not create domain — ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
+  }
+
+  const queueDomainReloadPrompt = (): void => {
+    if (!vscode.workspace.isTrusted) return;
+    if (domainChangeTimer) clearTimeout(domainChangeTimer);
+    domainChangeTimer = setTimeout(() => {
+      domainChangeTimer = undefined;
+      if (domainReloadPromptVisible) return;
+      domainReloadPromptVisible = true;
+      void vscode.window
+        .showInformationMessage(
+          'AIViz: workspace domain files changed. Reload domains to use the new definitions.',
+          'Reload Domains'
+        )
+        .then(async (choice) => {
+          if (choice === 'Reload Domains') await reloadDomains();
+        })
+        .then(() => {
+          domainReloadPromptVisible = false;
+        }, () => {
+          domainReloadPromptVisible = false;
+        });
+    }, 300);
+  };
+
+  const resetDomainWatchers = (): void => {
+    for (const watcher of domainWatchers) watcher.dispose();
+    domainWatchers = [];
+    if (!vscode.workspace.isTrusted) return;
+    for (const folder of vscode.workspace.workspaceFolders ?? []) {
+      const watcher = vscode.workspace.createFileSystemWatcher(
+        new vscode.RelativePattern(folder, '.aiviz/domains/**')
+      );
+      domainWatchers.push(
+        watcher,
+        watcher.onDidCreate(queueDomainReloadPrompt),
+        watcher.onDidChange(queueDomainReloadPrompt),
+        watcher.onDidDelete(queueDomainReloadPrompt)
+      );
+    }
+  };
+
+  resetDomainWatchers();
+  if (!vscode.workspace.isTrusted) {
+    domainOutput.appendLine(
+      'Workspace is untrusted: AIViz built-in domains remain available; workspace domains are disabled.'
+    );
+  }
+
   context.subscriptions.push(
     vscode.commands.registerCommand('aiviz.analyze', () => runAnalysis()),
     vscode.commands.registerCommand('aiviz.compare', () => runCompare()),
     vscode.commands.registerCommand('aiviz.loadTrace', () => loadTraceFile()),
+    vscode.commands.registerCommand('aiviz.createDomain', () => createWorkspaceDomain()),
+    vscode.commands.registerCommand('aiviz.reloadDomains', () => reloadDomains()),
+    vscode.commands.registerCommand('aiviz.showDomainDiagnostics', () => showDomainDiagnostics()),
     vscode.commands.registerCommand('aiviz.next', () =>
       ui.post({ type: 'command', action: 'next' })
     ),
@@ -364,23 +609,39 @@ export function activate(context: vscode.ExtensionContext): void {
       ui.post({ type: 'command', action: 'stepOverWidening' })
     ),
     vscode.window.onDidChangeTextEditorSelection((e) => {
-      if (e.textEditor.document.languageId !== 'c') return;
+      if (!providerForDocument(e.textEditor.document)) return;
+      if (e.textEditor.document.uri.fsPath !== ui.currentFile()) return;
       const line = e.selections[0]?.active.line;
       if (line !== undefined) ui.highlightLine(line + 1);
     }),
     // Re-run the analysis when the file it came from is saved, so the panel
     // never shows stale results next to edited source. Only the file already
-    // being shown triggers this — saving an unrelated C file elsewhere in the
+    // being shown triggers this — saving an unrelated supported file elsewhere in the
     // workspace should not steal the panel.
     vscode.workspace.onDidSaveTextDocument((doc) => {
-      if (doc.languageId !== 'c') return;
+      if (!providerForDocument(doc)) return;
       if (!ui.hasSurface || doc.uri.fsPath !== ui.currentFile()) return;
       if (!vscode.workspace.getConfiguration('aiviz').get('analyzeOnSave', true)) return;
 
       const selection = ui.currentSelection();
       void runAnalysis(selection?.function, selection?.domain, { doc, silent: true });
     }),
-    { dispose: () => client?.dispose() },
+    vscode.workspace.onDidChangeWorkspaceFolders(() => {
+      resetDomainWatchers();
+      queueDomainReloadPrompt();
+    }),
+    vscode.workspace.onDidGrantWorkspaceTrust(() => {
+      resetDomainWatchers();
+      void reloadDomains();
+    }),
+    {
+      dispose: () => {
+        if (domainChangeTimer) clearTimeout(domainChangeTimer);
+        for (const watcher of domainWatchers) watcher.dispose();
+        disposeProviderClients();
+      },
+    },
+    domainOutput,
     { dispose: () => ui.dispose() }
   );
 }

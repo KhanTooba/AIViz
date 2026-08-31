@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "apiVersion": "0.2",
+  "id": "zero-nonzero",
+  "name": "Zero / Nonzero",
+  "description": "Tracks whether each integer is definitely zero, definitely nonzero, unknown, or unreachable.",
+  "kind": "value-lattice",
+  "entry": "./domain.mjs",
+  "languages": ["c", "llvm-ir"]
+}

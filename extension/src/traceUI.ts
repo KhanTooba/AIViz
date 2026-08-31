@@ -64,7 +64,8 @@ export class TraceUI {
           } else {
             this.postTo(surface, {
               type: 'status',
-              message: 'Open a C file and run “AIViz: Analyze Current Function”.',
+              message:
+                'Open a C source (.c) or textual LLVM IR (.ll) file and run “AIViz: Analyze Current Function”.',
             });
           }
           break;

@@ -13,8 +13,20 @@ export interface DomainInfo {
   id: string;
   name: string;
   description?: string;
+  /** Whether the provider shipped this domain or discovered it in a trusted workspace. */
+  origin?: 'built-in' | 'workspace';
   /** True if the domain's lattice is finite and can be drawn as a Hasse diagram. */
   finiteLattice?: boolean;
+}
+
+/** A problem found while discovering optional workspace domains. These are
+ * provider-level diagnostics, not source-program diagnostics, so no source
+ * line is required. */
+export interface ProviderDiagnostic {
+  severity: 'error' | 'warning' | 'info';
+  code: string;
+  message: string;
+  path?: string;
 }
 
 export interface ProviderInfo {
@@ -26,6 +38,8 @@ export interface ProviderInfo {
   /** Language ids, e.g. `['c']`. */
   languages: string[];
   domains: DomainInfo[];
+  /** Discovery failures do not prevent built-in domains from being advertised. */
+  domainDiagnostics?: ProviderDiagnostic[];
   capabilities?: {
     /** Provider can emit `narrow` steps. */
     narrowing?: boolean;

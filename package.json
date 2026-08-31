@@ -9,7 +9,7 @@
     "extension"
   ],
   "scripts": {
-    "build": "npm run build -w packages/trace-protocol -w packages/analysis-core -w packages/provider-sdk -w packages/provider-c-source -w packages/provider-llvm-ir -w extension",
+    "build": "npm run build -w packages/trace-protocol -w packages/analysis-core -w packages/domain-sdk -w packages/provider-sdk -w packages/provider-c-source -w packages/provider-llvm-ir -w extension",
     "test": "npm run test --workspaces --if-present",
     "clean": "rm -rf packages/*/dist extension/dist extension/out"
   },

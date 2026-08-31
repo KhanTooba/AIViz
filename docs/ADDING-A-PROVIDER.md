@@ -4,12 +4,14 @@ A provider is a separate process that speaks the [AIViz trace protocol](./PROTOC
 that document first for the wire format. This one is a practical walkthrough: what to
 implement, how to launch it, and how to check it before wiring it into anything.
 
-**Current limitation, stated up front:** the VS Code extension shipped in this repo only
-launches its one bundled provider (`@aiviz/provider-c-source`) today. There is no
-settings-based provider registry yet for pointing the extension at an external provider — that
-is on the roadmap, not implemented. What you get today from following this guide is a provider
-process you can test standalone with the conformance kit; wiring an arbitrary third-party
-provider into the extension's UI is future work.
+**Current limitation, stated up front:** the VS Code extension ships an internal registry for
+its two bundled providers (`@aiviz/provider-c-source` and `@aiviz/provider-llvm-ir`) and selects
+between them from the open document. There is no settings-based registry for pointing the
+extension at an arbitrary external provider. What you get from following this guide is a
+provider process you can test standalone with the conformance kit; adding it to the extension
+still requires an explicit bundled-provider integration. This is separate from the v0.2.0
+workspace-domain interface, which extends the built-in analysis engine with a value lattice
+rather than registering another analysis process.
 
 ## The contract
 

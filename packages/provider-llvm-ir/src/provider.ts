@@ -21,7 +21,8 @@ import {
   type PrecheckResult,
   type ProviderInfo,
 } from '@aiviz/trace-protocol';
-import { analyze, domainById, DOMAINS } from '@aiviz/analysis-core';
+import { analyze, DOMAINS } from '@aiviz/analysis-core';
+import { loadWorkspaceDomains, type DomainLoadResult } from '@aiviz/domain-sdk';
 import { buildCfg } from './cfgbuilder.js';
 import { precheckFunction } from './precheck.js';
 import { parseModule } from './parser.js';
@@ -32,13 +33,39 @@ const PROVIDER = {
   version: '0.1.0',
 } as const;
 
+export interface LlvmIrProviderOptions {
+  /** Absolute trusted-workspace `.aiviz/domains` directories, supplied by the extension. */
+  domainDirectories?: readonly string[];
+}
+
 export class LlvmIrProvider implements AnalysisProvider {
-  initialize(): ProviderInfo {
+  private catalog?: Promise<DomainLoadResult>;
+
+  constructor(private readonly options: LlvmIrProviderOptions = {}) {}
+
+  private domains(): Promise<DomainLoadResult> {
+    this.catalog ??= loadWorkspaceDomains({
+      directories: this.options.domainDirectories,
+      language: 'llvm-ir',
+      builtInDomains: DOMAINS,
+    });
+    return this.catalog;
+  }
+
+  async initialize(): Promise<ProviderInfo> {
+    const catalog = await this.domains();
+    const workspaceIds = new Set(catalog.workspaceDomains.map((loaded) => loaded.domain.id));
     return {
       ...PROVIDER,
       protocolVersion: PROTOCOL_VERSION,
       languages: ['llvm-ir'],
-      domains: DOMAINS.map((d) => ({ id: d.id, name: d.name, finiteLattice: d.finiteLattice })),
+      domains: catalog.domains.map((d) => ({
+        id: d.id,
+        name: d.name,
+        finiteLattice: d.finiteLattice,
+        origin: workspaceIds.has(d.id) ? 'workspace' : 'built-in',
+      })),
+      ...(catalog.diagnostics.length > 0 ? { domainDiagnostics: catalog.diagnostics } : {}),
       capabilities: { narrowing: true, wideningLoss: true, latticeGraph: true },
       supportedSubset:
         'Scalar i32/i1 only: alloca/load/store locals, phi nodes, add/sub/mul/sdiv/srem, ' +
@@ -83,7 +110,7 @@ export class LlvmIrProvider implements AnalysisProvider {
     return { supported: diagnostics.length === 0, diagnostics };
   }
 
-  analyze(req: AnalyzeRequest): AnalysisTrace {
+  async analyze(req: AnalyzeRequest): Promise<AnalysisTrace> {
     const mod = parseModule(req.source);
     const fn = mod.functions.find((f) => f.name === req.function);
     if (!fn) {
@@ -102,7 +129,7 @@ export class LlvmIrProvider implements AnalysisProvider {
       return unsupportedTrace(req, diagnostics, fn.line);
     }
 
-    const domain = domainById(req.domain);
+    const domain = (await this.domains()).domains.find((candidate) => candidate.id === req.domain);
     if (!domain) {
       return unsupportedTrace(req, [
         { severity: 'error', code: 'domain.unknown', message: `unknown domain \`${req.domain}\``, line: 1 },

@@ -1,9 +1,9 @@
 # AIViz — Abstract Interpretation Visualizer
 
 Step through static-analysis fixpoint computations like a debugger. AIViz runs real abstract
-interpretation on your C function and shows you the control-flow graph, the abstract state at
-every program point, and exactly what joins, widening, and narrowing do to it — one step at a
-time, forward or backward.
+interpretation on a C or textual LLVM IR function and shows you the control-flow graph, the
+abstract state at every program point, and exactly what joins, widening, and narrowing do to it
+— one step at a time, forward or backward.
 
 This isn't a slide-deck simulation of abstract interpretation. It's a real fixpoint engine
 running nine real abstract domains, instrumented to explain itself.
@@ -36,7 +36,8 @@ running nine real abstract domains, instrumented to explain itself.
 
 ## Getting started
 
-1. Open a `.c` file and put your cursor in a function.
+1. Open a `.c` or `.ll` file and put your cursor in a function. AIViz automatically selects its
+   bundled source-level C or textual LLVM IR provider.
 2. Run **AIViz: Analyze Current Function** (editor toolbar, or the command palette).
 3. Click through the CFG, or use **Next Step** / **Previous Step** (`F10` / `Shift+F10`) and
    **Step Over to Next Widening** (`F11`).
@@ -47,6 +48,11 @@ Supported C subset: `int`/`bool` locals, `+ - * / %`, `if`/`else`, `while`, `for
 function calls, or recursion. A rejected function tells you exactly why, with a real line
 number, rather than silently producing a wrong or misleading analysis.
 
+Supported LLVM IR subset: textual `.ll` files with scalar `i32`/`i1` values,
+`alloca`/`load`/`store` locals, SSA `phi` nodes, signed arithmetic and comparisons, structured
+branches, and returns. Calls, pointer arithmetic, floats, aggregates, vectors, bitwise/shift
+operations, and unsigned arithmetic are rejected with diagnostics.
+
 ## Settings
 
 | Setting | Default | What it does |
@@ -55,6 +61,17 @@ number, rather than silently producing a wrong or misleading analysis.
 | `aiviz.narrowing` | `true` | Run narrowing passes after widening to recover precision |
 | `aiviz.maxIterations` | `200` | Abort rather than hang on a pathological fixpoint |
 | `aiviz.analyzeOnSave` | `true` | Re-run the analysis automatically when the analyzed file is saved |
+
+## Add a domain from your workspace
+
+In a **trusted** workspace, add a value lattice under
+`.aiviz/domains/<domain-id>/domain.json` and `domain.mjs`, then run **AIViz: Reload Domains**.
+Use **AIViz: Create Custom Domain** to generate a validated starting point in that directory.
+The provider subprocess validates and loads it; the extension host does not execute workspace
+domain code. File changes prompt for a reload, and **AIViz: Show Domain Diagnostics** explains
+invalid manifests, version mismatches, collisions, and module failures without disabling
+built-in domains. The subprocess is crash isolation, not a security sandbox. See the full
+[domain-authoring guide](../docs/ADDING-A-DOMAIN.md).
 
 ## Why this exists
 
@@ -66,6 +83,6 @@ the parts that sometimes recover it (narrowing).
 
 ## Learn more
 
-The full project — the trace protocol, the fixpoint engine, all nine domains, and a second
-analysis provider built on LLVM IR to prove the whole design is provider-agnostic — lives at the
-project repository, along with the protocol reference and a guide for writing your own provider.
+The full project — the trace protocol, the fixpoint engine, all nine domains, and both bundled
+analysis providers — lives at the project repository, along with the protocol reference and a
+guide for writing your own provider.

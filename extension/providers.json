@@ -1,0 +1,20 @@
+[
+  {
+    "id": "c-source",
+    "name": "C (source-level, tree-sitter)",
+    "languageIds": ["c"],
+    "fileExtensions": [".c"],
+    "bundlePath": "dist/providers/c-source/main.cjs",
+    "developmentPackage": "provider-c-source",
+    "needsWasmDirectory": true
+  },
+  {
+    "id": "llvm-ir",
+    "name": "LLVM IR",
+    "languageIds": ["llvm-ir", "llvm"],
+    "fileExtensions": [".ll"],
+    "bundlePath": "dist/providers/llvm-ir/main.cjs",
+    "developmentPackage": "provider-llvm-ir",
+    "needsWasmDirectory": false
+  }
+]

@@ -13,9 +13,26 @@
   },
   "categories": ["Visualization", "Education", "Programming Languages"],
   "keywords": ["abstract interpretation", "static analysis", "cfg", "c", "teaching"],
-  "activationEvents": ["onLanguage:c"],
+  "activationEvents": [
+    "onLanguage:c",
+    "onLanguage:llvm-ir",
+    "onLanguage:llvm",
+    "onCommand:aiviz.analyze",
+    "onCommand:aiviz.compare",
+    "onCommand:aiviz.loadTrace",
+    "onCommand:aiviz.createDomain",
+    "onCommand:aiviz.reloadDomains",
+    "onCommand:aiviz.showDomainDiagnostics"
+  ],
   "main": "./dist/extension.cjs",
   "contributes": {
+    "languages": [
+      {
+        "id": "llvm-ir",
+        "aliases": ["LLVM IR", "llvm-ir"],
+        "extensions": [".ll"]
+      }
+    ],
     "commands": [
       {
         "command": "aiviz.analyze",
@@ -48,18 +65,36 @@
         "command": "aiviz.loadTrace",
         "title": "AIViz: Load Trace From File",
         "category": "AIViz"
+      },
+      {
+        "command": "aiviz.createDomain",
+        "title": "AIViz: Create Custom Domain",
+        "category": "AIViz",
+        "icon": "$(new-file)"
+      },
+      {
+        "command": "aiviz.reloadDomains",
+        "title": "AIViz: Reload Domains",
+        "category": "AIViz",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "aiviz.showDomainDiagnostics",
+        "title": "AIViz: Show Domain Diagnostics",
+        "category": "AIViz",
+        "icon": "$(output)"
       }
     ],
     "menus": {
       "editor/title": [
         {
           "command": "aiviz.analyze",
-          "when": "editorLangId == c",
+          "when": "editorLangId == c || editorLangId == llvm-ir || editorLangId == llvm || resourceExtname == .ll",
           "group": "navigation"
         },
         {
           "command": "aiviz.compare",
-          "when": "editorLangId == c",
+          "when": "editorLangId == c || editorLangId == llvm-ir || editorLangId == llvm || resourceExtname == .ll",
           "group": "navigation"
         }
       ]
@@ -108,9 +143,16 @@
       }
     }
   },
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": "limited",
+      "description": "Built-in AIViz domains remain available. Workspace-local domain modules are disabled until the workspace is trusted."
+    }
+  },
   "scripts": {
-    "build": "node build.js",
+    "build": "tsc -p tsconfig.json --noEmit && node build.js",
     "watch": "node build.js --watch",
+    "test": "node --test test/*.test.mjs",
     "package": "npm run build && vsce package --no-dependencies --allow-missing-repository --no-rewrite-relative-links --out aiviz.vsix"
   },
   "dependencies": {

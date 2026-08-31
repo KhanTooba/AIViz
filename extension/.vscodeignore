@@ -2,6 +2,7 @@
 # sources and their dependencies are not shipped.
 src/**
 dev/**
+test/**
 build.js
 tsconfig.json
 node_modules/**

@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "tool": "AIViz",
+  "targetVersion": "0.2.0",
+  "targetTag": "v0.2.0",
+  "venue": {
+    "name": "SANER 2027 Tool Demo Track",
+    "abstractDeadline": "2026-10-19T23:59:59-12:00",
+    "paperDeadline": "2026-10-23T23:59:59-12:00",
+    "paperPageLimitIncludingReferences": 5,
+    "cfp": "https://conf.researchr.org/track/saner-2027/saner-2027-tool-demo-track"
+  },
+  "releaseArtifacts": [
+    "git-tag",
+    "marketplace-extension",
+    "vsix",
+    "archived-artifact",
+    "external-domain-example",
+    "evaluation-data",
+    "demo-video",
+    "paper"
+  ],
+  "claimIds": [
+    "AIVIZ-C1",
+    "AIVIZ-C2",
+    "AIVIZ-C3",
+    "AIVIZ-E1",
+    "AIVIZ-E2",
+    "AIVIZ-E3"
+  ]
+}

@@ -20,12 +20,11 @@ interpretation is the flagship demonstration, not the limit.
 The design is LSP-shaped: **client / server / versioned protocol**.
 
 ```
-  C source
-     │  provider (separate process, JSON-RPC over stdio)
-     ▼
-  tree-sitter ──> CFG ──> instrumented worklist fixpoint
-     │
-     ▼
+  C source ──> tree-sitter provider ──┐
+                                      ├──> CFG ──> instrumented worklist fixpoint
+  LLVM IR ──> textual IR provider ───┘
+                  │ separate processes, JSON-RPC over stdio
+                  ▼
   AnalysisTrace (versioned JSON)
      │
      ▼
@@ -38,6 +37,7 @@ The design is LSP-shaped: **client / server / versioned protocol**.
 | `packages/analysis-core` | Abstract domains and the instrumented fixpoint engine |
 | `packages/provider-sdk` | Helpers for *writing* a provider: stdio transport, manifest loading, conformance kit (`aiviz-conformance`) |
 | `packages/provider-c-source` | v1 reference provider: source-level C via tree-sitter, built on `provider-sdk` |
+| `packages/provider-llvm-ir` | Textual LLVM IR provider, including SSA `phi` lowering |
 | `extension` | The VS Code client |
 
 The engine and domains live **provider-side**. The client is analysis-free, which is what lets a
@@ -102,8 +102,9 @@ cd extension && npm run build && node dev/make-preview.js
 # open extension/dist/preview.html
 ```
 
-In VS Code: press `F5` to launch the Extension Development Host, open a file from `examples/`,
-and run **AIViz: Analyze Current Function**.
+In VS Code: press `F5` to launch the Extension Development Host, open a `.c` or `.ll` file from
+`examples/`, and run **AIViz: Analyze Current Function**. The extension selects its bundled C
+or LLVM IR provider from the document language/file extension; both render in the same panel.
 
 ## One source line is often several program points
 
@@ -173,6 +174,20 @@ drifts from the schema produces a clear error rather than a broken panel.
 
 Full protocol reference: [`docs/PROTOCOL.md`](docs/PROTOCOL.md).
 
+## Adding a domain in a trusted workspace
+
+The installed extension can also extend its built-in non-relational engine with a workspace-local
+value lattice. Put a `domain.json` and `domain.mjs` under
+`.aiviz/domains/<domain-id>/`, trust the workspace, then run **AIViz: Reload Domains**. The
+selected provider loads and validates the module in its own subprocess; the VS Code extension
+host never imports it. Invalid modules appear in **AIViz: Show Domain Diagnostics** and do not
+disable built-in domains. See [`docs/ADDING-A-DOMAIN.md`](docs/ADDING-A-DOMAIN.md) for the exact
+manifest and interface.
+
+Use **AIViz: Create Custom Domain** for an in-editor scaffold, or use the `aiviz-domain create`
+and `aiviz-domain check` CLI for terminal-based authoring. A separately packaged, copyable
+example lives in [`examples/zero-nonzero-domain`](examples/zero-nonzero-domain).
+
 ## A second frontend: LLVM IR
 
 [`packages/provider-llvm-ir`](packages/provider-llvm-ir) is a second, complete provider —
@@ -204,11 +219,10 @@ optimized SSA-form IR), signed arithmetic and comparisons, and structured branch
 pointer arithmetic beyond a bare local, floats, bitwise/shift ops, or unsigned arithmetic — see
 `provider-llvm-ir/src/precheck.ts` for the exact allow-list.
 
-Matching [`docs/ADDING-A-PROVIDER.md`](docs/ADDING-A-PROVIDER.md)'s own honesty about the
-current state of things: this is not yet wired into the VS Code panel's UI (the extension only
-launches its one bundled provider today, with no provider registry) — it's a standalone
-package, tested via its own suite and the conformance kit, run standalone the same way the
-guide describes for any new provider.
+The VS Code extension bundles this provider alongside the C provider and selects it automatically
+for `.ll` documents. The two processes remain independent, but both return the same trace format
+to the same domain-agnostic panel. The extension's bundle-level test launches both packaged
+executables over the real stdio transport and analyzes one fixture in each language.
 
 ## Status
 
@@ -219,9 +233,9 @@ stepping, state diffing, narration, widening-loss reporting, the lattice view (H
 finite lattices, ascending chain otherwise), side-by-side domain comparison, and a relations
 section for the four relational domains' cross-variable facts.
 
-Not yet built: wiring the LLVM IR provider into the VS Code panel itself (it's a standalone
-package today — see "A second frontend: LLVM IR" above), and marketplace publishing polish
-(icon, README GIFs).
+Not yet built: the final self-contained Marketplace/VSIX release workflow. Arbitrary external
+analysis-provider registration is also outside the current extension UI; v0.2.0 bundles the C
+and LLVM IR providers explicitly.
 
 ## License
 

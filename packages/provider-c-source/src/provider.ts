@@ -17,7 +17,8 @@ import {
   type PrecheckResult,
   type ProviderInfo,
 } from '@aiviz/trace-protocol';
-import { analyze, domainById, DOMAINS } from '@aiviz/analysis-core';
+import { analyze, DOMAINS } from '@aiviz/analysis-core';
+import { loadWorkspaceDomains, type DomainLoadResult } from '@aiviz/domain-sdk';
 import { buildCfg } from './cfgbuilder.js';
 import { precheckFunction } from './precheck.js';
 import { findFunctions, functionName, parseC } from './parser.js';
@@ -28,17 +29,39 @@ const PROVIDER = {
   version: '0.1.0',
 } as const;
 
+export interface CSourceProviderOptions {
+  /** Absolute trusted-workspace `.aiviz/domains` directories, supplied by the extension. */
+  domainDirectories?: readonly string[];
+}
+
 export class CSourceProvider implements AnalysisProvider {
-  initialize(): ProviderInfo {
+  private catalog?: Promise<DomainLoadResult>;
+
+  constructor(private readonly options: CSourceProviderOptions = {}) {}
+
+  private domains(): Promise<DomainLoadResult> {
+    this.catalog ??= loadWorkspaceDomains({
+      directories: this.options.domainDirectories,
+      language: 'c',
+      builtInDomains: DOMAINS,
+    });
+    return this.catalog;
+  }
+
+  async initialize(): Promise<ProviderInfo> {
+    const catalog = await this.domains();
+    const workspaceIds = new Set(catalog.workspaceDomains.map((loaded) => loaded.domain.id));
     return {
       ...PROVIDER,
       protocolVersion: PROTOCOL_VERSION,
       languages: ['c'],
-      domains: DOMAINS.map((d) => ({
+      domains: catalog.domains.map((d) => ({
         id: d.id,
         name: d.name,
         finiteLattice: d.finiteLattice,
+        origin: workspaceIds.has(d.id) ? 'workspace' : 'built-in',
       })),
+      ...(catalog.diagnostics.length > 0 ? { domainDiagnostics: catalog.diagnostics } : {}),
       capabilities: { narrowing: true, wideningLoss: true, latticeGraph: true },
       supportedSubset:
         'Integer scalars only: int/bool locals, + - * / %, if/else, while, for, ' +
@@ -102,7 +125,7 @@ export class CSourceProvider implements AnalysisProvider {
       return unsupportedTrace(req, diagnostics, fn.startPosition.row + 1);
     }
 
-    const domain = domainById(req.domain);
+    const domain = (await this.domains()).domains.find((candidate) => candidate.id === req.domain);
     if (!domain) {
       return unsupportedTrace(req, [
         {
