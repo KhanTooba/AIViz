@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased — target 0.2.0
+## Unreleased: target 0.2.0
 
 - Bundle both the source-level C and textual LLVM IR providers in the extension.
 - Select the provider automatically from the document language or `.c`/`.ll` extension.

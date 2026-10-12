@@ -1,6 +1,6 @@
 {
   "name": "@aiviz/analysis-core",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Abstract domains and the instrumented fixpoint engine",
   "license": "MIT",
   "type": "module",
@@ -18,6 +18,6 @@
     "test": "node --test dist/test/*.test.js"
   },
   "dependencies": {
-    "@aiviz/trace-protocol": "0.1.0"
+    "@aiviz/trace-protocol": "0.2.0"
   }
 }

@@ -64,7 +64,7 @@ function layoutBlock(b: Block, blockToLines: Record<string, LineRange[]>): Block
 
 /** Renders a line set the way the protocol intends it to read: `7, 9–11`. */
 export function formatLines(ranges: LineRange[]): string {
-  if (ranges.length === 0) return '—';
+  if (ranges.length === 0) return 'n/a';
   const parts = ranges.map((r) => (r.start === r.end ? `${r.start}` : `${r.start}–${r.end}`));
   return parts.length === 1 ? `line ${parts[0]}` : `lines ${parts.join(', ')}`;
 }

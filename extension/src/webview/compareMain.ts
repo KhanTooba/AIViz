@@ -88,7 +88,7 @@ class CompareApp {
   mount(): void {
     this.root.replaceChildren(
       section('Comparison', this.headerEl),
-      section('Control flow graph (shared — same program)', this.cfgHost),
+      section('Control flow graph: shared program', this.cfgHost),
       this.pickersEl,
       section('Per-iteration comparison', this.tableHost)
     );
@@ -166,7 +166,7 @@ class CompareApp {
     for (const block of a.cfg.blocks) {
       const opt = h('option', { value: block.blockId }) as HTMLOptionElement;
       const label = block.label?.split('\n')[0] ?? block.blockId;
-      opt.textContent = `${block.blockId} — ${label} (${formatLines(block.lines)})`;
+      opt.textContent = `${block.blockId}: ${label} (${formatLines(block.lines)})`;
       opt.selected = block.blockId === this.selectedBlock;
       blockSelect.append(opt);
     }
@@ -267,7 +267,7 @@ class CompareApp {
         h('span', { class: 'muted compare-kind' }, ` stabilized at iteration ${lastIter}`)
       );
     }
-    return h('td', { class: 'muted' }, '—');
+    return h('td', { class: 'muted' }, 'n/a');
   }
 }
 

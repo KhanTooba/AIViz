@@ -1,6 +1,6 @@
 # Adding a provider
 
-A provider is a separate process that speaks the [AIViz trace protocol](./PROTOCOL.md) — see
+A provider is a separate process that speaks the [AIViz trace protocol](./PROTOCOL.md): see
 that document first for the wire format. This one is a practical walkthrough: what to
 implement, how to launch it, and how to check it before wiring it into anything.
 
@@ -31,12 +31,12 @@ interface AnalysisProvider {
 `analyze()` is the one with real work to do. The pattern this repo uses (see
 [`@aiviz/analysis-core`](../packages/analysis-core)) is: parse to a small IR, build a CFG, run
 an instrumented worklist fixpoint that emits a `Step` per state transition, return the whole
-thing as one `AnalysisTrace`. None of that is prescribed by the protocol — only the shape of
+thing as one `AnalysisTrace`. None of that is prescribed by the protocol: only the shape of
 what `analyze()` returns is.
 
 ## Option A: TypeScript, using `@aiviz/provider-sdk`
 
-This is what `provider-c-source` itself does — the SDK is not aspirational, it's dogfooded by
+This is what `provider-c-source` itself does: the SDK is not aspirational, it's dogfooded by
 the provider this extension ships.
 
 **1. Implement `AnalysisProvider`.**
@@ -74,7 +74,7 @@ import { MyProvider } from './myProvider.js';
 serveOverStdio(new MyProvider());
 ```
 
-That's the entire entry point — compare
+That's the entire entry point: compare
 [`provider-c-source/src/main.ts`](../packages/provider-c-source/src/main.ts), which is exactly
 this.
 
@@ -92,11 +92,11 @@ this.
 ```
 
 `command`/`args` are resolved relative to the manifest's own directory (or `cwd`, if given) via
-`resolveProviderLaunch` — see [`@aiviz/provider-sdk`](../packages/provider-sdk).
+`resolveProviderLaunch`: see [`@aiviz/provider-sdk`](../packages/provider-sdk).
 
 ## Option B: any other language
 
-The protocol is deliberately language-agnostic — see [PROTOCOL.md](./PROTOCOL.md#transport).
+The protocol is deliberately language-agnostic: see [PROTOCOL.md](./PROTOCOL.md#transport).
 Read one line of JSON at a time from stdin, write one line of JSON per response to stdout:
 
 ```python
@@ -122,12 +122,12 @@ for line in sys.stdin:
 The one behavior worth copying exactly from `serveOverStdio`: **don't exit the instant stdin
 closes if a request is still being processed.** If your analysis is ever asynchronous (a
 subprocess call, a thread pool), track in-flight requests and defer exit until they've all
-replied — otherwise a slow request's answer is silently dropped the moment the client
+replied: otherwise a slow request's answer is silently dropped the moment the client
 disconnects.
 
 ## Checking your provider
 
-Before wiring anything up, run the conformance kit against it — the same checks a real client
+Before wiring anything up, run the conformance kit against it: the same checks a real client
 implicitly depends on, run directly against your process over the real transport:
 
 ```bash
@@ -154,9 +154,9 @@ npx aiviz-conformance --manifest provider.json --fixture fixture.json
 
 This checks: `initialize()` is well-formed; `listFunctions()` reports your fixture function as
 supported; `precheck()` agrees; `analyze()` returns a schema-valid, converged trace with a
-non-empty explanation on every step; and — if you provide `unsupported` — that a rejected
+non-empty explanation on every step; and: if you provide `unsupported`: that a rejected
 program still gets a real line number and a protocol-valid "not supported" trace rather than a
-thrown error. Without `--fixture`, only `initialize()` is checked — enough to confirm your
+thrown error. Without `--fixture`, only `initialize()` is checked: enough to confirm your
 process starts and speaks JSON-RPC, not that its analysis is correct.
 
 Run it without spawning a process at all, in your own test suite:
@@ -171,19 +171,19 @@ assert.equal(summarize(checks).ok, true);
 
 This is exactly what
 [`provider-c-source`'s own test suite](../packages/provider-c-source/src/test/conformance.test.ts)
-does — it is not a separate code path from what the CLI runs, just a different transport (an
+does: it is not a separate code path from what the CLI runs, just a different transport (an
 in-process object instead of a spawned RPC proxy) feeding the same `runConformanceSuite`.
 
 ## See also
 
-- [PROTOCOL.md](./PROTOCOL.md) — the wire format and trace schema in full.
-- [`packages/provider-c-source`](../packages/provider-c-source) — a complete reference
+- [PROTOCOL.md](./PROTOCOL.md): the wire format and trace schema in full.
+- [`packages/provider-c-source`](../packages/provider-c-source): a complete reference
   implementation, source-level C via tree-sitter.
-- [`packages/provider-llvm-ir`](../packages/provider-llvm-ir) — a second complete reference
+- [`packages/provider-llvm-ir`](../packages/provider-llvm-ir): a second complete reference
   implementation, LLVM textual IR (`.ll`) via a hand-rolled parser. Concrete evidence for this
   guide's own claim that the protocol is provider-agnostic: it reuses `@aiviz/analysis-core`'s
   engine and every domain completely unchanged, translating a structurally different IR
   (SSA `phi` nodes included) down to the same tiny `Cfg`/`Expr`/`Cond` shape the C provider
   produces.
-- [`packages/provider-sdk`](../packages/provider-sdk) — `serveOverStdio`, the manifest loader,
+- [`packages/provider-sdk`](../packages/provider-sdk): `serveOverStdio`, the manifest loader,
   and the conformance kit's source.

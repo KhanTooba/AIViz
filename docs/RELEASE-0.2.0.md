@@ -24,13 +24,13 @@ does not evaluate those outcomes.
 The paper will organize its contribution around three claims. Their stable identifiers must be
 used in the paper notes, artifact scripts, raw evaluation output, and release checklist.
 
-1. **AIVIZ-C1 — Observable fixpoint execution.** AIViz materializes a deterministic,
+1. **AIVIZ-C1: Observable fixpoint execution.** AIViz materializes a deterministic,
    protocol-valid static-analysis trace and lets a user replay transfers, joins, widening,
    narrowing, and widening loss in the VS Code interface.
-2. **AIVIZ-C2 — Provider-independent visualization.** The same extension and trace UI analyze C
+2. **AIVIZ-C2: Provider-independent visualization.** The same extension and trace UI analyze C
    source and textual LLVM IR through separately bundled providers without language-specific
    analysis logic in the client.
-3. **AIVIZ-C3 — Extension without modification.** A third party can add a compatible abstract
+3. **AIVIZ-C3: Extension without modification.** A third party can add a compatible abstract
    value domain under `.aiviz/domains/<domain-id>/`, validate it, reload domains, and use it in
    the existing UI without editing or rebuilding AIViz.
 
@@ -39,13 +39,13 @@ abstract domains are not presented as novel.
 
 ## Supporting engineering claims
 
-- **AIVIZ-E1 — Installability.** A reviewer can install a self-contained Marketplace release or
+- **AIVIZ-E1: Installability.** A reviewer can install a self-contained Marketplace release or
   matching VSIX and run a bundled example without installing this repository's dependencies.
-- **AIVIZ-E2 — Isolation and failure handling.** Workspace domain code runs only in a trusted
+- **AIVIZ-E2: Isolation and failure handling.** Workspace domain code runs only in a trusted
   workspace and inside the provider subprocess. Invalid manifests, incompatible API versions,
   ID collisions, and exceptions produce diagnostics without disabling built-in domains. The
   subprocess boundary is crash isolation, not a security sandbox.
-- **AIVIZ-E3 — Interactive scale.** On the declared benchmark corpus and reference machine, the
+- **AIVIZ-E3: Interactive scale.** On the declared benchmark corpus and reference machine, the
   extension remains usable according to reported analysis latency, trace size, step count, and
   rendering measurements. The paper will report measured values rather than promise an
   unmeasured threshold.

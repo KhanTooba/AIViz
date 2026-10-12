@@ -1,10 +1,18 @@
 {
   "name": "aiviz",
-  "displayName": "AIViz — Abstract Interpretation Visualizer",
+  "displayName": "AIViz: Abstract Interpretation Visualizer",
   "description": "Step through static-analysis fixpoint computations like a debugger: CFG, abstract states, joins, widening and narrowing.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "license": "MIT",
   "publisher": "aiviz",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/KhanTooba/AIForToddlers.git"
+  },
+  "bugs": {
+    "url": "https://github.com/KhanTooba/AIForToddlers/issues"
+  },
+  "homepage": "https://github.com/KhanTooba/AIForToddlers#readme",
   "private": true,
   "icon": "media/icon.png",
   "type": "module",
@@ -153,10 +161,10 @@
     "build": "tsc -p tsconfig.json --noEmit && node build.js",
     "watch": "node build.js --watch",
     "test": "node --test test/*.test.mjs",
-    "package": "npm run build && vsce package --no-dependencies --allow-missing-repository --no-rewrite-relative-links --out aiviz.vsix"
+    "package": "npm run build && vsce package --no-dependencies --allow-missing-repository --out aiviz.vsix"
   },
   "dependencies": {
-    "@aiviz/trace-protocol": "0.1.0",
+    "@aiviz/trace-protocol": "0.2.0",
     "@dagrejs/dagre": "^1.1.4"
   },
   "devDependencies": {

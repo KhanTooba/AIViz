@@ -1,6 +1,6 @@
 {
   "name": "aiviz",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A visualization platform and protocol for interactive static-analysis traces",
   "license": "MIT",
   "private": true,

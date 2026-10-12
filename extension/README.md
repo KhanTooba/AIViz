@@ -1,38 +1,38 @@
-# AIViz — Abstract Interpretation Visualizer
+# AIViz: Abstract Interpretation Visualizer
 
 Step through static-analysis fixpoint computations like a debugger. AIViz runs real abstract
 interpretation on a C or textual LLVM IR function and shows you the control-flow graph, the
-abstract state at every program point, and exactly what joins, widening, and narrowing do to it
-— one step at a time, forward or backward.
+abstract state at every program point, and exactly what joins, widening, and narrowing do to it.
+Use it one step at a time, forward or backward.
 
 This isn't a slide-deck simulation of abstract interpretation. It's a real fixpoint engine
 running nine real abstract domains, instrumented to explain itself.
 
-![Stepping through widening, with the discarded bound shown](media/demo-stepping-widening.gif)
+![Stepping through widening, with the discarded bound shown](https://github.com/KhanTooba/AIForToddlers/raw/HEAD/extension/media/demo-stepping-widening.gif)
 
 ## What you get
 
 - **Click a line, see the block.** A CFG panel next to your code; clicking a line highlights the
-  block(s) it maps to (one source line is often several program points — a `for` loop's
+  block(s) it maps to (one source line is often several program points: a `for` loop's
   initializer, condition, and update are three distinct blocks, and the panel shows all of
   them).
 - **Step like a debugger.** Next / Previous walk the analysis one transfer at a time. Step-over-
   widening jumps straight to the next widening point, skipping the iterations in between.
 - **See what widening actually throws away.** Every widening step shows the bound a plain join
-  would have kept, struck through next to what widening actually kept — the cost of guaranteed
+  would have kept, struck through next to what widening actually kept: the cost of guaranteed
   termination, made visible instead of implicit.
 - **Turn narrowing on or off** and watch the same program end at a different answer. That
   difference is the lesson, not a bug.
 - **Nine abstract domains**, five non-relational (Intervals, Sign, Constant Propagation, Parity,
   Congruence) and four relational (Zones, Octagons, Zonotopes, Polyhedra) that track
-  relationships *between* variables — a **Relations** section shows the cross-variable facts a
+  relationships *between* variables: a **Relations** section shows the cross-variable facts a
   relational domain finds (e.g. `j - i ≤ 1`) that no per-variable domain can express at all.
-- **Compare domains side by side** on the same function, iteration by iteration — see exactly
+- **Compare domains side by side** on the same function, iteration by iteration: see exactly
   where a more precise domain diverges from a coarser one, and why.
 - **A lattice view** for every domain: a Hasse diagram for the finite ones (Sign, Parity), the
   actual ascending chain traversed for the infinite ones (Intervals, Zones, ...).
 
-![Comparing Intervals against Congruence on the same function, block by block](media/demo-compare-mode.gif)
+![Comparing Intervals against Congruence on the same function, block by block](https://github.com/KhanTooba/AIForToddlers/raw/HEAD/extension/media/demo-compare-mode.gif)
 
 ## Getting started
 
@@ -44,7 +44,7 @@ running nine real abstract domains, instrumented to explain itself.
 4. Run **AIViz: Compare Domains** to see two domains analyze the same function side by side.
 
 Supported C subset: `int`/`bool` locals, `+ - * / %`, `if`/`else`, `while`, `for`, `do-while`,
-`break`, `continue`, `return`, and nested loops — no pointers, arrays, structs, floats, `goto`,
+`break`, `continue`, `return`, and nested loops: no pointers, arrays, structs, floats, `goto`,
 function calls, or recursion. A rejected function tells you exactly why, with a real line
 number, rather than silently producing a wrong or misleading analysis.
 
@@ -77,12 +77,12 @@ built-in domains. The subprocess is crash isolation, not a security sandbox. See
 
 Abstract interpretation courses usually stop at the math. This is the part after the math: what
 a real, instrumented fixpoint computation actually does, at the granularity of one transfer
-function at a time, on your own code. The engine and every domain are genuinely implemented —
-not a slide simulation — including the parts that are supposed to lose precision (widening) and
+function at a time, on your own code. The engine and every domain are genuinely implemented,
+not a slide simulation. This includes the parts that are supposed to lose precision (widening) and
 the parts that sometimes recover it (narrowing).
 
 ## Learn more
 
-The full project — the trace protocol, the fixpoint engine, all nine domains, and both bundled
-analysis providers — lives at the project repository, along with the protocol reference and a
+The full project: the trace protocol, the fixpoint engine, all nine domains, and both bundled
+analysis providers: lives at the project repository, along with the protocol reference and a
 guide for writing your own provider.

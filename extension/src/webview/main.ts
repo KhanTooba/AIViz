@@ -229,7 +229,7 @@ class App {
     const fnSelect = h('select', { class: 'picker' }) as HTMLSelectElement;
     for (const f of s.functions) {
       const opt = h('option', { value: f.name }) as HTMLOptionElement;
-      opt.textContent = f.supported ? f.name : `${f.name} — unsupported`;
+      opt.textContent = f.supported ? f.name : `${f.name}: unsupported`;
       opt.disabled = !f.supported;
       if (f.reason) opt.title = f.reason;
       opt.selected = f.name === s.selectedFunction;
@@ -311,7 +311,7 @@ class App {
           { class: 'status-note' },
           `This source line maps to ${this.relatedBlocks.length} program points: ` +
             this.relatedBlocks.join(', ') +
-            ' — one line of C is often several distinct points in the CFG.'
+            ': one line of C is often several distinct points in the CFG.'
         )
       );
     }
@@ -414,7 +414,7 @@ class App {
 
     if (step.after.kind === 'bottom') {
       this.stateEl.replaceChildren(
-        h('p', { class: 'muted' }, '⊥ — this program point is unreachable.')
+        h('p', { class: 'muted' }, '⊥: this program point is unreachable.')
       );
       return;
     }
@@ -439,7 +439,7 @@ class App {
       const row = h('tr', { class: didChange ? 'row-changed' : '' });
       row.append(
         h('td', { class: 'vname' }, v.name),
-        h('td', { class: `val val-${prev?.kind ?? 'top'}` }, prev?.repr ?? '—'),
+        h('td', { class: `val val-${prev?.kind ?? 'top'}` }, prev?.repr ?? 'n/a'),
         h('td', { class: 'arrow' }, didChange ? '→' : ''),
         h('td', { class: `val val-${v.kind}` }, v.repr)
       );
@@ -481,7 +481,7 @@ class App {
           'div',
           { class: 'loss-head' },
           h('span', { class: 'vname' }, l.name),
-          h('span', { class: 'muted' }, ` — ${l.lostBound} bound discarded`)
+          h('span', { class: 'muted' }, `: ${l.lostBound} bound discarded`)
         ),
         h(
           'div',

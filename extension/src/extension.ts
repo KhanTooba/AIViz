@@ -90,7 +90,7 @@ export function activate(context: vscode.ExtensionContext): void {
     );
     if (!launch) {
       throw new Error(
-        `could not find the bundled ${provider.name} provider — run \`npm run build\` in the repo root.`
+        `could not find the bundled ${provider.name} provider: run \`npm run build\` in the repo root.`
       );
     }
     const client = new ProviderClient({
@@ -130,7 +130,7 @@ export function activate(context: vscode.ExtensionContext): void {
     }
     panel = vscode.window.createWebviewPanel(
       'aiviz.tracePanel',
-      'AIViz — Analysis Trace',
+      'AIViz: Analysis Trace',
       { viewColumn: vscode.ViewColumn.Beside, preserveFocus: true },
       {
         enableScripts: true,
@@ -245,7 +245,7 @@ export function activate(context: vscode.ExtensionContext): void {
           .slice(0, 3)
           .map((i) => `${i.path || '<root>'}: ${i.message}`)
           .join('; ');
-        throw new Error(`provider returned an invalid trace — ${detail}`);
+        throw new Error(`provider returned an invalid trace: ${detail}`);
       }
 
       ui.setTrace(trace, {
@@ -281,7 +281,7 @@ export function activate(context: vscode.ExtensionContext): void {
           .slice(0, 3)
           .map((i) => `${i.path || '<root>'}: ${i.message}`)
           .join('; ');
-        throw new Error(`not a valid AIViz trace — ${detail}`);
+        throw new Error(`not a valid AIViz trace: ${detail}`);
       }
       const trace = parsed as AnalysisTrace;
       openPanel();
@@ -315,7 +315,7 @@ export function activate(context: vscode.ExtensionContext): void {
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${webview.cspSource} data:; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link href="${styles}" rel="stylesheet">
-<title>AIViz — Compare Domains</title>
+<title>AIViz: Compare Domains</title>
 </head>
 <body>
 <div id="root"></div>
@@ -409,7 +409,7 @@ export function activate(context: vscode.ExtensionContext): void {
             .slice(0, 3)
             .map((i) => `${i.path || '<root>'}: ${i.message}`)
             .join('; ');
-          throw new Error(`provider returned an invalid trace — ${detail}`);
+          throw new Error(`provider returned an invalid trace: ${detail}`);
         }
       }
 
@@ -462,7 +462,7 @@ export function activate(context: vscode.ExtensionContext): void {
           failure.reason instanceof Error ? failure.reason.message : String(failure.reason)
         )
         .join('; ');
-      void vscode.window.showErrorMessage(`AIViz: could not reload domains — ${detail}`);
+      void vscode.window.showErrorMessage(`AIViz: could not reload domains: ${detail}`);
       return;
     }
 
@@ -540,7 +540,7 @@ export function activate(context: vscode.ExtensionContext): void {
       }
     } catch (error) {
       void vscode.window.showErrorMessage(
-        `AIViz: could not create domain — ${error instanceof Error ? error.message : String(error)}`
+        `AIViz: could not create domain: ${error instanceof Error ? error.message : String(error)}`
       );
     }
   }

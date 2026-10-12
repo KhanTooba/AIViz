@@ -1,6 +1,6 @@
 {
   "name": "@aiviz/trace-protocol",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Versioned protocol for interactive static-analysis traces",
   "license": "MIT",
   "type": "module",
