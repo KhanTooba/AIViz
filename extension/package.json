@@ -7,12 +7,12 @@
   "publisher": "aiviz",
   "repository": {
     "type": "git",
-    "url": "https://github.com/KhanTooba/AIForToddlers.git"
+    "url": "https://github.com/KhanTooba/AIViz.git"
   },
   "bugs": {
-    "url": "https://github.com/KhanTooba/AIForToddlers/issues"
+    "url": "https://github.com/KhanTooba/AIViz/issues"
   },
-  "homepage": "https://github.com/KhanTooba/AIForToddlers#readme",
+  "homepage": "https://github.com/KhanTooba/AIViz#readme",
   "private": true,
   "icon": "media/icon.png",
   "type": "module",

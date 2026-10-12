@@ -8,7 +8,7 @@ Use it one step at a time, forward or backward.
 This isn't a slide-deck simulation of abstract interpretation. It's a real fixpoint engine
 running nine real abstract domains, instrumented to explain itself.
 
-![Stepping through widening, with the discarded bound shown](https://github.com/KhanTooba/AIForToddlers/raw/HEAD/extension/media/demo-stepping-widening.gif)
+![Stepping through widening, with the discarded bound shown](https://github.com/KhanTooba/AIViz/raw/HEAD/extension/media/demo-stepping-widening.gif)
 
 ## What you get
 
@@ -32,7 +32,7 @@ running nine real abstract domains, instrumented to explain itself.
 - **A lattice view** for every domain: a Hasse diagram for the finite ones (Sign, Parity), the
   actual ascending chain traversed for the infinite ones (Intervals, Zones, ...).
 
-![Comparing Intervals against Congruence on the same function, block by block](https://github.com/KhanTooba/AIForToddlers/raw/HEAD/extension/media/demo-compare-mode.gif)
+![Comparing Intervals against Congruence on the same function, block by block](https://github.com/KhanTooba/AIViz/raw/HEAD/extension/media/demo-compare-mode.gif)
 
 ## Getting started
 
