@@ -12,9 +12,9 @@
   },
   "releaseArtifacts": [
     "git-tag",
-    "marketplace-extension",
+    "github-release",
     "vsix",
-    "archived-artifact",
+    "release-evidence",
     "external-domain-example",
     "evaluation-data",
     "demo-video",

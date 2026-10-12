@@ -6,11 +6,11 @@ or make claims about learning outcomes.
 
 ## Five-minute reviewer tutorial
 
-The final release will attach `aiviz-0.2.0.vsix` to the archival release and identify the same
-version on the VS Code Marketplace. Use either source, not both.
+The final GitHub Release will attach `aiviz-0.2.0.vsix` and the generated evidence archive.
+Use the VSIX asset downloaded from that release.
 
-1. In VS Code, choose **Extensions: Install from VSIX...** and select `aiviz-0.2.0.vsix` (or
-   install **AIViz 0.2.0** from the Marketplace).
+1. In VS Code, choose **Extensions: Install from VSIX...** and select the downloaded
+   `aiviz-0.2.0.vsix` asset.
 2. Open a new, trusted folder and add the supplied `examples/count.c` file. No repository
    checkout, Node installation, compiler, or external analysis binary is required for this step.
 3. Place the cursor in `count`, run **AIViz: Analyze Current Function**, choose **Intervals**,
@@ -66,11 +66,11 @@ Before publishing, execute and record the following at the frozen `v0.2.0` revis
 - [ ] Build the VSIX with `npm run package -w extension`; record its SHA-256 and size.
 - [ ] On a clean VS Code profile, time the five-minute tutorial using the VSIX; repeat on the
   supported operating systems and record VS Code version, OS, and architecture.
-- [ ] Verify the Marketplace package and VSIX have the same version and byte-identical packaged
-  contents where applicable.
+- [ ] Verify that the GitHub Release asset has the expected version, checksum, and packaged
+  contents.
 - [ ] Add clean-install, concrete-containment, and browser-rendering measurements before final
   release evidence is frozen.
 - [ ] Ensure every paper claim cites a claim ID and generated result, and that the paper, VSIX,
-  example package, demo video, archive, and Git tag all say `0.2.0`.
+  example package, demo video, GitHub Release, and Git tag all say `0.2.0`.
 
 No publish, tag, or upload is performed by any command in this directory.

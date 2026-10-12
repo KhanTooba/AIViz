@@ -239,7 +239,7 @@ stepping, state diffing, narration, widening-loss reporting, the lattice view (H
 finite lattices, ascending chain otherwise), side-by-side domain comparison, and a relations
 section for the four relational domains' cross-variable facts.
 
-Not yet built: the final self-contained Marketplace/VSIX release workflow. Arbitrary external
+Not yet built: the final self-contained GitHub Release/VSIX workflow. Arbitrary external
 analysis-provider registration is also outside the current extension UI; v0.2.0 bundles the C
 and LLVM IR providers explicitly.
 

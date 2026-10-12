@@ -39,8 +39,8 @@ abstract domains are not presented as novel.
 
 ## Supporting engineering claims
 
-- **AIVIZ-E1: Installability.** A reviewer can install a self-contained Marketplace release or
-  matching VSIX and run a bundled example without installing this repository's dependencies.
+- **AIVIZ-E1: Installability.** A reviewer can install the self-contained VSIX from the GitHub
+  Release and run a bundled example without installing this repository's dependencies.
 - **AIVIZ-E2: Isolation and failure handling.** Workspace domain code runs only in a trusted
   workspace and inside the provider subprocess. Invalid manifests, incompatible API versions,
   ID collisions, and exceptions produce diagnostics without disabling built-in domains. The
@@ -76,7 +76,7 @@ continue to work, and the UI must explain why the workspace domains are unavaila
 
 The release is not ready to tag until all of the following are true:
 
-- [ ] Marketplace and VSIX installation is self-contained and takes less than five minutes in
+- [ ] GitHub Release VSIX installation is self-contained and takes less than five minutes in
   the automated clean-environment acceptance procedure.
 - [ ] C and LLVM IR both work through the installed extension.
 - [ ] The separately packaged example domain loads with zero changes to tracked AIViz source.
@@ -88,7 +88,7 @@ The release is not ready to tag until all of the following are true:
 - [ ] The demo shows widening loss, domain comparison, LLVM IR, and external-domain reloading.
 - [ ] Automated acceptance tests exercise a fresh installation and the written tutorial without
   relying on repository dependencies.
-- [ ] Git tag, Marketplace package, VSIX, archived artifact, external example, evaluation data,
+- [ ] Git tag, GitHub Release, VSIX, release evidence, external example, evaluation data,
   video, and paper all identify version `0.2.0`; recorded checksums match the frozen files.
 
 ## Version policy
@@ -98,9 +98,9 @@ after all release gates pass and before collecting the final evidence. At that f
 
 1. set every workspace package and internal dependency to `0.2.0`;
 2. rebuild and rerun the complete artifact suite from a clean checkout;
-3. package the VSIX and publish the byte-equivalent Marketplace build;
-4. archive code, example, evaluation data, and checksums under a DOI;
-5. insert the tag, commit, DOI, Marketplace identifier, video URL, and checksums into the paper;
+3. package the VSIX and upload it to the GitHub Release with the evidence archive;
+4. preserve code, example, evaluation data, and checksums in that public release;
+5. insert the tag, commit, GitHub Release URL, video URL, and checksums into the paper;
 6. make no behavioral change without issuing a new version and regenerating all evidence.
 
 ## Explicitly out of scope
